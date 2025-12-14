@@ -1,0 +1,30 @@
+extends layout
+
+block content
+  h1 Recent Question Boxes
+
+  if posts.length === 0
+    p.no-posts No posts yet. Be the first to create one!
+  else
+    .posts-grid
+      each post in posts
+        .post-card
+          h2.post-title
+            a(href=`/post/${post.id}`)= post.title
+          .post-meta
+            span.author by #{post.author_name}
+            span.date= new Date(post.created_at).toLocaleDateString()
+            span.comment-count #{post.comment_count} comments
+          .post-preview
+            - var preview = post.content.substring(0, 200)
+            - var needsEllipsis = post.content.length > 200
+            p= preview + (needsEllipsis ? '...' : '')
+          a.read-more(href=`/post/${post.id}`) Read Full Post →
+
+  if totalPages > 1
+    .pagination
+      if currentPage > 1
+        a.page-btn(href=`/?page=${currentPage - 1}`) ← Previous
+      span.page-info Page #{currentPage} of #{totalPages}
+      if currentPage < totalPages
+        a.page-btn(href=`/?page=${currentPage + 1}`) Next →
