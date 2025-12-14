@@ -331,6 +331,95 @@ body {
 .comment-content {
     white-space: pre-wrap;
     line-height: 1.6;
+    margin-bottom: 10px;
+}
+
+.comment-actions {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.btn-reply {
+    background-color: #007bff;
+    color: white;
+}
+
+.btn-reply:hover {
+    background-color: #0056b3;
+}
+
+.reply-form-container {
+    margin-top: 10px;
+    padding: 15px;
+    background-color: #fff;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+}
+
+.reply-form .reply-content {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-family: Arial, sans-serif;
+    font-size: 0.95em;
+    min-height: 80px;
+    resize: vertical;
+    margin-bottom: 10px;
+}
+
+.btn-cancel-reply {
+    background-color: #6c757d;
+    color: white;
+}
+
+.btn-cancel-reply:hover {
+    background-color: #5a6268;
+}
+
+.replies-list {
+    margin-top: 15px;
+    padding-left: 20px;
+    border-left: 2px solid #e5deae;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.reply {
+    background-color: #fafafa;
+    padding: 12px;
+    border-radius: 5px;
+    border: 1px solid #e5e5e5;
+}
+
+.reply-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 0.85em;
+}
+
+.reply-date {
+    color: #999;
+}
+
+.reply-content {
+    white-space: pre-wrap;
+    line-height: 1.6;
+    font-size: 0.95em;
+    margin-bottom: 8px;
+}
+
+.btn-delete-reply {
+    background-color: #dc3545;
+    color: white;
+}
+
+.btn-delete-reply:hover {
+    background-color: #c82333;
 }
 
 .no-comments {

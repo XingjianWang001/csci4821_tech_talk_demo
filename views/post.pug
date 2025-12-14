@@ -42,7 +42,7 @@ block content
         p.no-comments No comments yet.
       else
         each comment in comments
-          .comment(data-comment-id=comment.id)
+          .comment(data-comment-id=comment.id data-post-id=post.id data-comment-author-id=comment.user_id)
             .comment-header
               if comment.is_anonymous && !user
                 strong Anonymous
@@ -54,8 +54,39 @@ block content
                 strong= comment.username
               span.comment-date= new Date(comment.created_at).toLocaleString()
             .comment-content= comment.content
-            if user && (user.id === comment.user_id || user.isAdmin)
-              button.btn.btn-small.btn-delete-comment(data-comment-id=comment.id) Delete
+            .comment-actions
+              if user && (user.id === comment.user_id || user.isAdmin)
+                button.btn.btn-small.btn-delete-comment(data-comment-id=comment.id) Delete
+              if user && (user.id === post.author_id || user.id === comment.user_id || user.isAdmin)
+                button.btn.btn-small.btn-reply(data-comment-id=comment.id) Reply
+
+            .reply-form-container(style="display: none;")
+              form.reply-form(data-comment-id=comment.id)
+                textarea.reply-content(name="content" placeholder="Write your reply..." required)
+                .form-row
+                  label
+                    input.reply-anonymous-checkbox(type="checkbox" name="is_anonymous")
+                    |  Reply anonymously
+                  button.btn.btn-small(type="submit") Submit Reply
+                  button.btn.btn-small.btn-cancel-reply(type="button") Cancel
+
+            if comment.replies && comment.replies.length > 0
+              .replies-list
+                each reply in comment.replies
+                  .reply(data-reply-id=reply.id)
+                    .reply-header
+                      if reply.is_anonymous && !user
+                        strong Anonymous
+                      else if reply.is_anonymous && user
+                        strong Anonymous
+                        if user.isAdmin
+                          span.real-user  (actually: #{reply.username})
+                      else
+                        strong= reply.username
+                      span.reply-date= new Date(reply.created_at).toLocaleString()
+                    .reply-content= reply.content
+                    if user && (user.id === reply.user_id || user.isAdmin)
+                      button.btn.btn-small.btn-delete-reply(data-reply-id=reply.id) Delete
 
 block scripts
   script(src="/js/main.js")
