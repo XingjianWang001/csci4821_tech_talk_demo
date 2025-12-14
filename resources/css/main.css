@@ -1,0 +1,27 @@
+
+
+header {
+    background-color: olive;
+    height: 10vh;
+}
+footer{
+    background-color: aqua;
+    height: 15vh;
+}
+body>div{
+    background-color: aquamarine;
+    height: calc(75vh);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: row;
+
+}
+
+nav {
+    width: 25%;
+    background-color: grey;
+}
+main {
+    width: 75%;
+    background-color: azure;
+}
