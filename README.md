@@ -13,13 +13,15 @@ npm install
 ```
 mysql -u C4131F25U149 -p -h cse-mysql-classes-02.cse.umn.edu -P 3306 C4131F25U149 < schema.sql
 ```
+Enter a valid password
 
 3. Start SSH tunnel if working from home:
 ```
 ssh -L 3306:cse-mysql-classes-02.cse.umn.edu:3306 x500@csel-kh1262-01.cselabs.umn.edu
 ```
+x500 should be your x500
 
-4. Start server:
+4. Start server (in another new terminal):
 ```
 node server.js
 ```
@@ -37,7 +39,9 @@ node server.js
 ## Features
 
 C-Grade: Create, edit, delete blog posts with pagination
+
 B-Grade: AJAX comments and browsing with pagination
+
 A-Grade: User authentication, admin system, bcrypt password hashing
 
 ## Important URLs
