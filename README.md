@@ -11,7 +11,7 @@ npm install
 
 2. Set up database:
 ```
-mysql -u C4131F25U149 -p C4131F25U149 < schema.sql
+mysql -u C4131F25U149 -p -h cse-mysql-classes-02.cse.umn.edu -P 3306 C4131F25U149 < schema.sql
 ```
 
 3. Start SSH tunnel if working from home:
