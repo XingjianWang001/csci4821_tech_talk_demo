@@ -13,13 +13,13 @@ npm install
 ```
 mysql -u C4131F25U149 -p -h cse-mysql-classes-02.cse.umn.edu -P 3306 C4131F25U149 < schema.sql
 ```
-Enter a valid password
+Enter a valid database password
 
-3. Start SSH tunnel if working from home:
+3. Start SSH tunnel:
 ```
 ssh -L 3306:cse-mysql-classes-02.cse.umn.edu:3306 x500@csel-kh1262-01.cselabs.umn.edu
 ```
-x500 should be your x500
+Where x500 should be your x500
 
 4. Start server (in another new terminal):
 ```
@@ -44,15 +44,9 @@ B-Grade: AJAX comments and browsing with pagination
 
 A-Grade: User authentication, admin system, bcrypt password hashing
 
-## Important URLs
+## URLs
 
 - Home: http://localhost:4131/
 - Register: http://localhost:4131/register
 - Login: http://localhost:4131/login
 - Admin access: http://localhost:4131/make-me-admin-please
-
-## Notes
-
-Database connection is configured for localhost to work with SSH tunnel.
-All passwords are hashed with bcrypt.
-Comments use AJAX so no page reload is needed.
