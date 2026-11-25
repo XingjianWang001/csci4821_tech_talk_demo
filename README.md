@@ -4,29 +4,22 @@ A simple blog platform for creating posts and comments.
 
 ## Setup
 
+Requires Node.js 22.13 or newer (uses the built-in `node:sqlite` module). No external database is needed.
+
 1. Install dependencies:
 ```
 npm install
 ```
 
-2. Set up database:
+2. Start server:
 ```
-mysql -u C4131F25U149 -p -h cse-mysql-classes-02.cse.umn.edu -P 3306 C4131F25U149 < schema.sql
+npm start
 ```
-Enter a valid database password
+On first run, a local SQLite file `data.db` is created and initialized from `schema.sql`.
 
-3. Start SSH tunnel:
-```
-ssh -L 3306:cse-mysql-classes-02.cse.umn.edu:3306 x500@csel-kh1262-01.cselabs.umn.edu
-```
-Where x500 should be your x500
+3. Open browser to http://localhost:4131
 
-4. Start server (in another new terminal):
-```
-node server.js
-```
-
-5. Open browser to http://localhost:4131
+To reset all data, stop the server and delete `data.db`. Optional environment variables: `PORT` (default `4131`) and `DB_PATH` (default `./data.db`).
 
 ## Testing
 

@@ -3,7 +3,7 @@ const session = require('express-session');
 const bcrypt = require('bcrypt');
 const data = require('./data');
 const app = express();
-const port = 4131;
+const port = process.env.PORT || 4131;
 
 app.set('views', 'views');
 app.set('view engine', 'pug');
