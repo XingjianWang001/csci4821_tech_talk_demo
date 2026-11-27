@@ -32,7 +32,7 @@ app.use((req, res, next) => {
 
 function requireLogin(req, res, next) {
     if (!req.session.user) {
-        req.session.message = 'Please login first';
+        req.session.message = 'Log in to continue.';
         req.session.messageType = 'error';
         return res.redirect('/login');
     }
@@ -47,7 +47,7 @@ app.get('/', async (req, res) => {
     const totalCount = await data.getTotalPostsCount();
     const totalPages = Math.ceil(totalCount / limit);
     res.render('index',
-               {posts, currentPage : page, totalPages, title : 'Q&A Box Blog'});
+               {posts, currentPage : page, totalPages, title : 'Question Box Blog'});
 });
 
 app.get('/register', (req, res) => {
@@ -57,49 +57,49 @@ app.get('/register', (req, res) => {
 app.post('/register', async (req, res) => {
     const {username, password, password2} = req.body;
     if (!username || !password || !password2) {
-        req.session.message = 'All fields are required';
+        req.session.message = 'Fill in a username and both password fields.';
         req.session.messageType = 'error';
         return res.redirect('/register');
     }
     if (password !== password2) {
-        req.session.message = 'Passwords do not match';
+        req.session.message = "The passwords don't match. Enter the same password in both fields.";
         req.session.messageType = 'error';
         return res.redirect('/register');
     }
     const existingUser = await data.getUserByUsername(username);
     if (existingUser) {
-        req.session.message = 'Username already exists';
+        req.session.message = 'That username is taken. Choose a different one.';
         req.session.messageType = 'error';
         return res.redirect('/register');
     }
     const hashedPassword = await bcrypt.hash(password, 10);
     const userId = await data.addUser(username, hashedPassword);
     req.session.user = {id : userId, username, isAdmin : 0};
-    req.session.message = 'Registration successful';
+    req.session.message = `Account created. Welcome, ${username}!`;
     req.session.messageType = 'success';
     res.redirect('/');
 });
 
 app.get('/login', (req, res) => {
-    res.render('login', {title : 'Login'});
+    res.render('login', {title : 'Log In'});
 });
 
 app.post('/login', async (req, res) => {
     const {username, password} = req.body;
     if (!username || !password) {
-        req.session.message = 'Please enter username and password';
+        req.session.message = 'Enter your username and password.';
         req.session.messageType = 'error';
         return res.redirect('/login');
     }
     const user = await data.getUserByUsername(username);
     if (!user) {
-        req.session.message = 'Invalid username or password';
+        req.session.message = "That username and password don't match. Check them and try again.";
         req.session.messageType = 'error';
         return res.redirect('/login');
     }
     const match = await bcrypt.compare(password, user.password);
     if (!match) {
-        req.session.message = 'Invalid username or password';
+        req.session.message = "That username and password don't match. Check them and try again.";
         req.session.messageType = 'error';
         return res.redirect('/login');
     }
@@ -124,13 +124,13 @@ app.get(
            res) => {  // This Easter egg enables you to become an administrator.
                       // Login is required for it to take effect.
         if (!req.session.user) {
-            req.session.message = 'You need to log in first';
+            req.session.message = 'Log in first, then open this page again to become an admin.';
             req.session.messageType = 'error';
             return res.redirect('/login');
         }
         await data.makeUserAdmin(req.session.user.id);
         req.session.user.isAdmin = 1;
-        req.session.message = 'You are now Admin';
+        req.session.message = "You're now an admin. You can edit or delete any question box, comment or reply, and see who wrote anonymous ones.";
         req.session.messageType = 'success';
         res.redirect('/');
     });
@@ -143,26 +143,26 @@ app.get('/post/new', requireLogin, (req, res) => {
 app.post('/post/new', requireLogin, async (req, res) => {
     const {title, content} = req.body;
     if (!title || !content) {
-        req.session.message = 'Title and content are required';
+        req.session.message = 'Add a title and content before publishing.';
         req.session.messageType = 'error';
         return res.redirect('/post/new');
     }
     try {
         const user = await data.getUserByUsername(req.session.user.username);
         if (!user) {  // you need to login to create a question box
-            req.session.message = 'User account not found. Please login again.';
+            req.session.message = "Your account couldn't be found. Log in again to continue.";
             req.session.messageType = 'error';
             req.session.destroy();
             return res.redirect('/login');
         }
         req.session.user.id = user.id;
         const postId = await data.addPost(user.id, title, content);
-        req.session.message = 'Post created successfully';
+        req.session.message = 'Question box published.';
         req.session.messageType = 'success';
         res.redirect(`/post/${postId}`);
     } catch (error) {
         console.error('Error creating post');
-        req.session.message = 'Failed to create post. Please try again.';
+        req.session.message = "Couldn't publish your question box. Please try again.";
         req.session.messageType = 'error';
         res.redirect('/post/new');
     }
@@ -171,7 +171,7 @@ app.post('/post/new', requireLogin, async (req, res) => {
 app.get('/post/:id', async (req, res) => {
     const post = await data.getPostById(req.params.id);
     if (!post) {
-        return res.status(404).render('404', {title : '404 - Not Found'});
+        return res.status(404).render('404', {title : 'Page Not Found'});
     }
     const comments = await data.getCommentsByPostId(req.params.id);
     for (let comment of comments) {
@@ -183,29 +183,30 @@ app.get('/post/:id', async (req, res) => {
 app.get('/post/:id/edit', requireLogin, async (req, res) => {
     const post = await data.getPostById(req.params.id);
     if (!post) {
-        return res.status(404).render('404', {title : '404 - Not Found'});
+        return res.status(404).render('404', {title : 'Page Not Found'});
     }
     if (post.author_id !== req.session.user.id && !req.session.user.isAdmin) {
-        req.session.message = 'You do not have permission to edit this post';
+        req.session.message = 'Only the author or an admin can edit this question box.';
         req.session.messageType = 'error';
         return res.redirect(`/post/${req.params.id}`);
     }
-    res.render('post-form', {title : 'Edit Post', post, isEdit : true});
+    res.render('post-form', {title : 'Edit Question Box', post, isEdit : true});
 });
 
 app.post('/post/:id/edit', requireLogin, async (req, res) => {
     const ownerId = await data.getPostOwner(req.params.id);
     if (ownerId !== req.session.user.id && !req.session.user.isAdmin) {
-        return res.status(403).json({error : 'Permission denied'});
+        return res.status(403).json({error : 'Only the author or an admin can edit this question box.'});
     }
     const {title, content} = req.body;
     if (!title || !content) {
-        req.session.message = 'Title and content are required';
+        req.session.message =
+            'A question box needs a title and content. Fill in both to save.';
         req.session.messageType = 'error';
         return res.redirect(`/post/${req.params.id}/edit`);
     }
     await data.updatePost(req.params.id, title, content);
-    req.session.message = 'Post updated';
+    req.session.message = 'Question box updated.';
     req.session.messageType = 'success';
     res.redirect(`/post/${req.params.id}`);
 });
@@ -213,10 +214,10 @@ app.post('/post/:id/edit', requireLogin, async (req, res) => {
 app.post('/post/:id/delete', requireLogin, async (req, res) => {
     const ownerId = await data.getPostOwner(req.params.id);
     if (ownerId !== req.session.user.id && !req.session.user.isAdmin) {
-        return res.status(403).json({error : 'Permission denied'});
+        return res.status(403).json({error : 'Only the author or an admin can delete this question box.'});
     }
     await data.deletePost(req.params.id);
-    req.session.message = 'Post deleted successfully';
+    req.session.message = 'Question box deleted, along with its comments and replies.';
     req.session.messageType = 'success';
     res.redirect('/');
 });
@@ -224,13 +225,13 @@ app.post('/post/:id/delete', requireLogin, async (req, res) => {
 app.post('/api/comment', requireLogin, async (req, res) => {
     const {post_id, content, is_anonymous} = req.body;
     if (!post_id || !content) {
-        return res.status(400).json({error : 'Missing required fields'});
+        return res.status(400).json({error : 'Write something before adding your comment.'});
     }
     try {
         const user = await data.getUserByUsername(req.session.user.username);
         if (!user) {
             return res.status(401).json(
-                {error : 'User not found. Please login again.'});
+                {error : "Your account couldn't be found. Log in again to continue."});
         }
         req.session.user.id = user.id;
         const commentId = await data.addComment(
@@ -253,14 +254,14 @@ app.post('/api/comment', requireLogin, async (req, res) => {
     } catch (error) {
         console.error('Error adding comment:', error);
         res.status(500).json(
-            {error : 'Failed to add comment. Please try again.'});
+            {error : "Couldn't add your comment. Please try again."});
     }
 });
 
 app.delete('/api/comment/:id', requireLogin, async (req, res) => {
     const ownerId = await data.getCommentOwner(req.params.id);
     if (ownerId !== req.session.user.id && !req.session.user.isAdmin) {
-        return res.status(403).json({error : 'Permission denied'});
+        return res.status(403).json({error : 'Only the author or an admin can delete this comment.'});
     }
     await data.deleteComment(req.params.id);
     res.json({success : true});
@@ -269,25 +270,25 @@ app.delete('/api/comment/:id', requireLogin, async (req, res) => {
 app.post('/api/reply', requireLogin, async (req, res) => {
     const {comment_id, content, is_anonymous} = req.body;
     if (!comment_id || !content) {
-        return res.status(400).json({error : 'Missing required fields'});
+        return res.status(400).json({error : 'Write something before adding your reply.'});
     }
     try {
         const user = await data.getUserByUsername(req.session.user.username);
         if (!user) {
             return res.status(401).json(
-                {error : 'User not found. Please login again.'});
+                {error : "Your account couldn't be found. Log in again to continue."});
         }
         req.session.user.id = user.id;
         const comment = await data.getCommentById(comment_id);
         if (!comment) {
-            return res.status(404).json({error : 'Comment not found'});
+            return res.status(404).json({error : 'This comment no longer exists. Refresh the page to see the latest comments.'});
         }
         const post = await data.getPostById(comment.post_id);
         const isPostAuthor = post.author_id === user.id;
         const isCommentAuthor = comment.user_id === user.id;
         const isAdmin = user.isAdmin;
         if (!isPostAuthor && !isCommentAuthor && !isAdmin) {
-            return res.status(403).json({error : 'Permission denied'});
+            return res.status(403).json({error : 'Only the question box author, the commenter or an admin can reply.'});
         }
         const replyId = await data.addReply(
             comment_id,
@@ -309,21 +310,21 @@ app.post('/api/reply', requireLogin, async (req, res) => {
     } catch (error) {
         console.error('Error adding reply:', error);
         res.status(500).json(
-            {error : 'Failed to add reply. Please try again.'});
+            {error : "Couldn't add your reply. Please try again."});
     }
 });
 
 app.delete('/api/reply/:id', requireLogin, async (req, res) => {
     const ownerId = await data.getReplyOwner(req.params.id);
     if (ownerId !== req.session.user.id && !req.session.user.isAdmin) {
-        return res.status(403).json({error : 'Permission denied'});
+        return res.status(403).json({error : 'Only the author or an admin can delete this reply.'});
     }
     await data.deleteReply(req.params.id);
     res.json({success : true});
 });
 
 app.use((req, res) => {
-    res.status(404).render('404', {title : '404 - Not Found'});
+    res.status(404).render('404', {title : 'Page Not Found'});
 });
 
 app.listen(port, () => {

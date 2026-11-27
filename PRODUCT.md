@@ -13,7 +13,7 @@ The primary audience is the people watching a CSCI4821 tech talk on AI design to
 The in-app roles still exist and still have to work, but they come second. They are the characters in the demo, not the people design work is optimized for:
 
 - **Guest:** browses question boxes and comments. Cannot post or comment.
-- **Registered user:** posts question boxes, edits and deletes their own, and comments or replies, by name or anonymously.
+- **Registered user:** posts question boxes, edits and deletes their own, and comments by name or anonymously. They can reply to a comment, by name or anonymously, when they wrote the question box or the comment.
 - **Admin:** reached through `/make-me-admin-please`. Can edit and delete anything, and can see who wrote an anonymous comment.
 
 ## Product Purpose
@@ -42,7 +42,7 @@ This is a real, working full-stack app, not a mockup made for the talk. Its auth
 
 ## Brand Commitments
 
-None are binding. The existing name, "Q&A Box Blog", and the footer credits ("CSCI4131 Final Project", "Made with love by Shiba") are incumbent copy, not commitments.
+None are binding. The baseline name, "Q&A Box Blog", and the footer credits ("CSCI4131 Final Project", "Made with love by Shiba") are incumbent copy, not commitments. The redesign renames the app "Question Box Blog" so it no longer reads as a Q&A forum (decided in #7); the footer credits stay.
 
 ## Evidence on Hand
 

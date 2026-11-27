@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-27T04:07:45.973Z",
+  "generatedAt": "2026-11-27T04:10:33.113Z",
   "title": "Design System: Q&A Box Blog",
   "extensions": {
     "colorMeta": {
@@ -308,7 +308,7 @@
       "name": "Primary Button",
       "kind": "button",
       "refersTo": "button-primary",
-      "description": "The one main action per view: Publish, Login, Register, Submit Comment.",
+      "description": "The one main action per view: Publish, Log In, Register, Add Comment.",
       "html": "<button class=\"ds-btn-primary\">Publish</button>",
       "css": ".ds-btn-primary{padding:10px 20px;border:1px solid;border-radius:5px;font:inherit;font-size:1em;line-height:1.4;cursor:pointer;background:var(--color-accent,#a3461a);border-color:var(--color-accent,#a3461a);color:var(--color-on-accent,#fffdea);}.ds-btn-primary:hover{background:var(--color-accent-hover,#8a3712);border-color:var(--color-accent-hover,#8a3712);}.ds-btn-primary:focus-visible{outline:2px solid var(--color-focus,#8a3712);outline-offset:2px;}"
     },

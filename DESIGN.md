@@ -214,7 +214,7 @@ Gently rounded and consistent. The content surface has 10px corners. Buttons, in
 ### Buttons
 Three roles that are distinct in fill as well as hue, so they can't be confused at a glance.
 - **Shape:** 5px corners and a 1px border. Default size is 10px 20px; the small size is 5px 10px at 0.85em.
-- **Primary:** a red-tan fill with cream text (5.9:1). Use one per view: Publish/Update, Login, Register, Submit Comment, Submit Reply, Go Back Home. Hover deepens to Deep Red-Tan.
+- **Primary:** a red-tan fill with cream text (5.9:1). Use one per view: Publish / Save Changes, Log In, Register, Add Comment, Add Reply, Write the First One, Go Back Home. Hover deepens to Deep Red-Tan.
 - **Secondary:** the default button. A sesame-yellow fill, Shiba Black text and a Whisker outline. Used for Edit, Reply, Cancel and pagination. Hover goes to Deep Sesame.
 - **Destructive:** a paper fill with a Warning Red outline and text at rest. It fills solid red with paper text on hover. Used only for Delete on posts, comments and replies.
 - **Focus:** a 2px Deep Red-Tan outline, offset 2px.

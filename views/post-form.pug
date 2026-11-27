@@ -14,5 +14,5 @@ block content
                 textarea#content(name="content" rows="15" required)= post ? post.content : ''
 
             .form-actions
-                button.btn.btn-primary(type="submit")= isEdit ? 'Update' : 'Publish'
+                button.btn.btn-primary(type="submit")= isEdit ? 'Save Changes' : 'Publish'
                 a.btn.btn-secondary(href=post ? `/post/${post.id}` : '/') Cancel

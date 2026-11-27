@@ -29,19 +29,21 @@ document.addEventListener('DOMContentLoaded', () => {
                         false;
                 } else {
                     const error = await response.json();
-                    alert('Error: ' +
-                          (error.error || 'Failed to post comment'));
+                    alert(error.error ||
+                          "Couldn't add your comment. Refresh the page and try again.");
                 }
             } catch (error) {
                 console.error('Error: ', error);
-                alert('Failed to post comment. Please try again.');
+                alert(
+                    "Couldn't add your comment. Refresh the page and try again.");
             }
         });
     }
 
     deleteCommentButtons.forEach(btn => {
         btn.addEventListener('click', async () => {
-            if (!confirm('Are you sure you want to delete this comment?')) {
+            if (!confirm(
+                    "Delete this comment and all of its replies? This can't be undone.")) {
                 return;
             }
             const commentId = btn.getAttribute('data-comment-id');
@@ -53,12 +55,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     commentElement.remove();
                 } else {
                     const error = await response.json();
-                    alert('Error: ' +
-                          (error.error || 'Failed to delete comment'));
+                    alert(error.error ||
+                          "Couldn't delete the comment. Refresh the page and try again.");
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('Failed to delete comment. Please try again.');
+                alert(
+                    "Couldn't delete the comment. Refresh the page and try again.");
             }
         });
     });
@@ -114,18 +117,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (replyBtn) replyBtn.style.display = 'inline-block';
                 } else {
                     const error = await response.json();
-                    alert('Error: ' + (error.error || 'Failed to post reply'));
+                    alert(error.error ||
+                          "Couldn't add your reply. Refresh the page and try again.");
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('Failed to post reply. Please try again.');
+                alert(
+                    "Couldn't add your reply. Refresh the page and try again.");
             }
         });
     });
 
     deleteReplyButtons.forEach(btn => {
         btn.addEventListener('click', async () => {
-            if (!confirm('Are you sure you want to delete this reply?')) {
+            if (!confirm("Delete this reply? This can't be undone.")) {
                 return;
             }
             const replyId = btn.getAttribute('data-reply-id');
@@ -137,12 +142,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     replyElement.remove();
                 } else {
                     const error = await response.json();
-                    alert('Error: ' +
-                          (error.error || 'Failed to delete reply'));
+                    alert(error.error ||
+                          "Couldn't delete the reply. Refresh the page and try again.");
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('Failed to delete reply. Please try again.');
+                alert(
+                    "Couldn't delete the reply. Refresh the page and try again.");
             }
         });
     });
@@ -158,7 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
             repliesList.addEventListener('click', async (e) => {
                 if (e.target.classList.contains('btn-delete-reply')) {
                     const replyId = e.target.getAttribute('data-reply-id');
-                    if (!confirm('Delete this reply?')) {
+                    if (!confirm("Delete this reply? This can't be undone.")) {
                         return;
                     }
                     try {
@@ -167,11 +173,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (res.ok) {
                             e.target.closest('.reply').remove();
                         } else {
-                            alert('Failed to delete');
+                            alert(
+                                "Couldn't delete the reply. Refresh the page and try again.");
                         }
                     } catch (err) {
                         console.error(err);
-                        alert('something went wrong');
+                        alert(
+                            "Couldn't delete the reply. Refresh the page and try again.");
                     }
                 }
             });
@@ -246,8 +254,10 @@ document.addEventListener('DOMContentLoaded', () => {
         deleteBtn.className = 'btn btn-small btn-delete-comment';
         deleteBtn.setAttribute('data-comment-id', comment.id);
         deleteBtn.textContent = 'Delete';
+        deleteBtn.setAttribute('aria-label', 'Delete comment');
         deleteBtn.addEventListener('click', async () => {
-            if (!confirm('Are you sure you want to delete this comment?')) {
+            if (!confirm(
+                    "Delete this comment and all of its replies? This can't be undone.")) {
                 return;
             }
             try {
@@ -257,12 +267,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     commentDiv.remove();
                 } else {
                     const error = await response.json();
-                    alert('Error: ' +
-                          (error.error || 'Failed to delete comment'));
+                    alert(error.error ||
+                          "Couldn't delete the comment. Refresh the page and try again.");
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('Failed to delete comment. Please try again.');
+                alert(
+                    "Couldn't delete the comment. Refresh the page and try again.");
             }
         });
         commentActions.appendChild(deleteBtn);
@@ -271,6 +282,7 @@ document.addEventListener('DOMContentLoaded', () => {
             replyBtn.className = 'btn btn-small btn-reply';
             replyBtn.setAttribute('data-comment-id', comment.id);
             replyBtn.textContent = 'Reply';
+            replyBtn.setAttribute('aria-label', 'Reply to comment');
             replyBtn.addEventListener('click', () => {
                 const replyFormContainer =
                     commentDiv.querySelector('.reply-form-container');
@@ -289,6 +301,7 @@ document.addEventListener('DOMContentLoaded', () => {
         replyTextarea.className = 'reply-content';
         replyTextarea.name = 'content';
         replyTextarea.placeholder = 'Write your reply...';
+        replyTextarea.setAttribute('aria-label', 'Your reply');
         replyTextarea.required = true;
         const formRow = document.createElement('div');
         formRow.className = 'form-row';
@@ -299,10 +312,20 @@ document.addEventListener('DOMContentLoaded', () => {
         anonymousCheckbox.name = 'is_anonymous';
         label.appendChild(anonymousCheckbox);
         label.appendChild(document.createTextNode(' Reply anonymously'));
+        const anonField = document.createElement('div');
+        anonField.className = 'anon-field';
+        const anonHint = document.createElement('p');
+        anonHint.className = 'field-hint';
+        anonHint.id = `reply-anonymous-hint-${comment.id}`;
+        anonHint.textContent =
+            'Hidden from other readers. Admins can still see who wrote it.';
+        anonymousCheckbox.setAttribute('aria-describedby', anonHint.id);
+        anonField.appendChild(label);
+        anonField.appendChild(anonHint);
         const submitBtn = document.createElement('button');
         submitBtn.className = 'btn btn-small btn-primary';
         submitBtn.type = 'submit';
-        submitBtn.textContent = 'Submit Reply';
+        submitBtn.textContent = 'Add Reply';
         const cancelBtn = document.createElement('button');
         cancelBtn.className = 'btn btn-small btn-cancel-reply';
         cancelBtn.type = 'button';
@@ -314,7 +337,7 @@ document.addEventListener('DOMContentLoaded', () => {
             replyTextarea.value = '';
             anonymousCheckbox.checked = false;
         });
-        formRow.appendChild(label);
+        formRow.appendChild(anonField);
         formRow.appendChild(submitBtn);
         formRow.appendChild(cancelBtn);
         replyForm.appendChild(replyTextarea);
@@ -343,11 +366,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (replyBtn) replyBtn.style.display = 'inline-block';
                 } else {
                     const error = await response.json();
-                    alert('Error: ' + (error.error || 'Failed to post reply'));
+                    alert(error.error ||
+                          "Couldn't add your reply. Refresh the page and try again.");
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('Failed to post reply. Please try again.');
+                alert(
+                    "Couldn't add your reply. Refresh the page and try again.");
             }
         });
         replyFormContainer.appendChild(replyForm);

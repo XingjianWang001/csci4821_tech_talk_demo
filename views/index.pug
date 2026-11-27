@@ -2,29 +2,36 @@ extends layout
 
 block content
     h1 Recent Question Boxes
+    p.home-intro A question box is a blog post: someone writes it, and readers respond in the comments.
 
     if posts.length === 0
-        p.no-posts No posts yet
+        .no-posts
+            p No question boxes yet.
+            if user
+                a.btn.btn-primary(href="/post/new") Write the First One
+            else
+                p #[a(href="/login") Log in] or #[a(href="/register") register] to write the first one.
     else
         .posts-grid
             each post in posts
+                - var commentCount = Number(post.comment_count) || 0
                 .post-card
                     h2.post-title
                         a(href=`/post/${post.id}`)= post.title
                     .post-meta
                         span.author by #{post.author_name}
                         span.date= new Date(post.created_at).toLocaleDateString()
-                        span.comment-count #{post.comment_count} comments
+                        span.comment-count= commentCount === 1 ? '1 comment' : `${commentCount} comments`
                     .post-preview
                         - var preview = post.content.substring(0, 200)
                         - var needsEllipsis = post.content.length > 200
                         p= preview + (needsEllipsis ? '...' : '')
-                    a.read-more(href=`/post/${post.id}`) Read Full Post
+                    a.read-more(href=`/post/${post.id}`) Read Question Box
 
     if totalPages > 1
-        .pagination
+        nav.pagination(aria-label="Question box pages")
             if currentPage > 1
-                a.page-btn(href=`/?page=${currentPage - 1}`) ← Previous
+                a.page-btn(href=`/?page=${currentPage - 1}`) ← Newer
             span.page-info Page #{currentPage} of #{totalPages}
             if currentPage < totalPages
-                a.page-btn(href=`/?page=${currentPage + 1}`) Next →
+                a.page-btn(href=`/?page=${currentPage + 1}`) Older →
