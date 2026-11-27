@@ -1,6 +1,8 @@
 extends layout
 
 block content
+    - var anonymityHint = 'Hidden from other readers. Admins can still see who wrote it.'
+    - var replyRule = 'Only the question box author, the commenter or an admin can reply.'
     article.post-detail
         .post-header
             h1= post.title
@@ -13,7 +15,7 @@ block content
             if user && (user.id === post.author_id || user.isAdmin)
                 .post-actions
                     a.btn.btn-edit(href=`/post/${post.id}/edit`) Edit
-                    form.inline-form(action=`/post/${post.id}/delete` method="POST" data-confirm="Delete this question box and all its comments?")
+                    form.inline-form(action=`/post/${post.id}/delete` method="POST" data-confirm=`Delete the question box “${post.title}”? Its comments and replies will be deleted too. This can't be undone.`)
                         button.btn.btn-delete(type="submit") Delete
 
         .post-content= post.content
@@ -24,18 +26,20 @@ block content
 
         if user
             .comment-form
-                h3 Leave a Comment
+                h3#comment-form-heading Leave a Comment
                 form#comment-form(data-post-id=post.id)
-                    textarea#comment-content(name="content" placeholder="Write your comment here..." required)
+                    textarea#comment-content(name="content" placeholder="Write your comment here..." aria-labelledby="comment-form-heading" required)
                     .form-row
-                        label
-                            input#anonymous-checkbox(type="checkbox" name="is_anonymous")
-                            |  Post anonymously
-                        button.btn.btn-primary(type="submit") Submit Comment
+                        .anon-field
+                            label
+                                input#anonymous-checkbox(type="checkbox" name="is_anonymous" aria-describedby="anonymous-hint")
+                                |  Comment anonymously
+                            p.field-hint#anonymous-hint= anonymityHint
+                        button.btn.btn-primary(type="submit") Add Comment
                     p.form-status(role="status")
         else
             .login-prompt
-                p Please #[a(href=loginHref) login] to leave a comment.
+                p #[a(href=loginHref) Log in] or #[a(href=registerHref) register] to leave a comment.
 
         .comments-list
             if comments.length === 0
@@ -44,30 +48,30 @@ block content
                 each comment in comments
                     .comment(data-comment-id=comment.id data-post-id=post.id data-comment-author-id=comment.user_id)
                         .comment-header
-                            if comment.is_anonymous && !user
-                                strong Anonymous
-                            else if comment.is_anonymous && user
-                                strong Anonymous
-                                if user.isAdmin
-                                    span.real-user  (actually: #{comment.username})
-                            else
-                                strong= comment.username
+                            span.author-name
+                                strong= comment.is_anonymous ? 'Anonymous' : comment.username
+                                if comment.is_anonymous && user && user.isAdmin
+                                    span.real-user Written by #{comment.username} · only admins see this
                             span.comment-date= new Date(comment.created_at).toLocaleString()
                         .comment-content= comment.content
                         .comment-actions
                             if user && (user.id === comment.user_id || user.isAdmin)
-                                button.btn.btn-small.btn-delete-comment(data-comment-id=comment.id) Delete
+                                button.btn.btn-small.btn-delete-comment(data-comment-id=comment.id aria-label="Delete comment") Delete
                             if user && (user.id === post.author_id || user.id === comment.user_id || user.isAdmin)
-                                button.btn.btn-small.btn-reply(data-comment-id=comment.id) Reply
+                                button.btn.btn-small.btn-reply(data-comment-id=comment.id aria-label="Reply to comment") Reply
+                            else if user
+                                p.reply-rule= replyRule
 
                         .reply-form-container(style="display: none;")
                             form.reply-form(data-comment-id=comment.id)
-                                textarea.reply-content(name="content" placeholder="Write your reply..." required)
+                                textarea.reply-content(name="content" placeholder="Write your reply..." aria-label="Your reply" required)
                                 .form-row
-                                    label
-                                        input.reply-anonymous-checkbox(type="checkbox" name="is_anonymous")
-                                        |  Reply anonymously
-                                    button.btn.btn-small(type="submit") Submit Reply
+                                    .anon-field
+                                        label
+                                            input.reply-anonymous-checkbox(type="checkbox" name="is_anonymous" aria-describedby=`reply-anonymous-hint-${comment.id}`)
+                                            |  Reply anonymously
+                                        p.field-hint(id=`reply-anonymous-hint-${comment.id}`)= anonymityHint
+                                    button.btn.btn-small(type="submit") Add Reply
                                     button.btn.btn-small.btn-cancel-reply(type="button") Cancel
                                 p.form-status(role="status")
 
@@ -76,18 +80,14 @@ block content
                                 each reply in comment.replies
                                     .reply(data-reply-id=reply.id)
                                         .reply-header
-                                            if reply.is_anonymous && !user
-                                                strong Anonymous
-                                            else if reply.is_anonymous && user
-                                                strong Anonymous
-                                                if user.isAdmin
-                                                    span.real-user  (actually: #{reply.username})
-                                            else
-                                                strong= reply.username
+                                            span.author-name
+                                                strong= reply.is_anonymous ? 'Anonymous' : reply.username
+                                                if reply.is_anonymous && user && user.isAdmin
+                                                    span.real-user Written by #{reply.username} · only admins see this
                                             span.reply-date= new Date(reply.created_at).toLocaleString()
                                         .reply-content= reply.content
                                         if user && (user.id === reply.user_id || user.isAdmin)
-                                            button.btn.btn-small.btn-delete-reply(data-reply-id=reply.id) Delete
+                                            button.btn.btn-small.btn-delete-reply(data-reply-id=reply.id aria-label="Delete reply") Delete
 
     dialog#confirm-dialog(aria-labelledby="confirm-dialog-message")
         form(method="dialog")

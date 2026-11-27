@@ -70,7 +70,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // fetch() wrapper that always resolves to {ok, data} or {ok, error}.
-    async function send(url, options) {
+    // failMessage is shown when the server gives no message of its own.
+    async function send(url, options, failMessage) {
         let response;
         try {
             response = await fetch(url, {
@@ -85,7 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return {
                 ok : false,
                 error :
-                    'Could not reach the server. Check your connection and try again.'
+                    "Couldn't reach the server. Check your connection and try again."
             };
         }
         let data = null;
@@ -106,8 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!response.ok || !data) {
             return {
                 ok : false,
-                error : (data && data.error) ||
-                            'Something went wrong. Please try again.'
+                error : (data && data.error) || failMessage
             };
         }
         return {ok : true, data};
@@ -196,13 +196,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function authorHeader(className, dateClass, item) {
         const header = el('div', className);
-        header.append(el('strong', '', item.is_anonymous ? 'Anonymous'
+        const author = el('span', 'author-name');
+        author.append(el('strong', '', item.is_anonymous ? 'Anonymous'
                                                          : item.username));
         if (item.is_anonymous && viewerIsAdmin) {
-            header.append(
-                el('span', 'real-user', ` (actually: ${item.username})`));
+            author.append(el('span', 'real-user',
+                             `Written by ${item.username} · only admins see this`));
         }
-        header.append(el('span', dateClass,
+        header.append(author, el('span', dateClass,
                          new Date(item.created_at).toLocaleString()));
         return header;
     }
@@ -213,6 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const deleteBtn = el('button', 'btn btn-small btn-delete-reply', 'Delete');
         deleteBtn.type = 'button';
         deleteBtn.dataset.replyId = reply.id;
+        deleteBtn.setAttribute('aria-label', 'Delete reply');
         replyEl.append(authorHeader('reply-header', 'reply-date', reply),
                        el('div', 'reply-content', reply.content), deleteBtn);
         return replyEl;
@@ -228,10 +230,12 @@ document.addEventListener('DOMContentLoaded', () => {
             el('button', 'btn btn-small btn-delete-comment', 'Delete');
         deleteBtn.type = 'button';
         deleteBtn.dataset.commentId = comment.id;
+        deleteBtn.setAttribute('aria-label', 'Delete comment');
         // The author of a comment can always reply to it.
         const replyBtn = el('button', 'btn btn-small btn-reply', 'Reply');
         replyBtn.type = 'button';
         replyBtn.dataset.commentId = comment.id;
+        replyBtn.setAttribute('aria-label', 'Reply to comment');
         actions.append(deleteBtn, replyBtn);
 
         const container = el('div', 'reply-form-container');
@@ -241,18 +245,25 @@ document.addEventListener('DOMContentLoaded', () => {
         const textarea = el('textarea', 'reply-content');
         textarea.name = 'content';
         textarea.placeholder = 'Write your reply...';
+        textarea.setAttribute('aria-label', 'Your reply');
         textarea.required = true;
+        const hint = el('p', 'field-hint',
+                        'Hidden from other readers. Admins can still see who wrote it.');
+        hint.id = `reply-anonymous-hint-${comment.id}`;
         const checkbox = el('input', 'reply-anonymous-checkbox');
         checkbox.type = 'checkbox';
         checkbox.name = 'is_anonymous';
+        checkbox.setAttribute('aria-describedby', hint.id);
         const label = el('label');
         label.append(checkbox, ' Reply anonymously');
-        const submitBtn = el('button', 'btn btn-small', 'Submit Reply');
+        const anonField = el('div', 'anon-field');
+        anonField.append(label, hint);
+        const submitBtn = el('button', 'btn btn-small', 'Add Reply');
         submitBtn.type = 'submit';
         const cancelBtn = el('button', 'btn btn-small btn-cancel-reply', 'Cancel');
         cancelBtn.type = 'button';
         const row = el('div', 'form-row');
-        row.append(label, submitBtn, cancelBtn);
+        row.append(anonField, submitBtn, cancelBtn);
         const status = el('p', 'form-status');
         status.setAttribute('role', 'status');
         form.append(textarea, row, status);
@@ -330,7 +341,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 content : textarea.value,
                 is_anonymous : checkbox.checked
             })
-        });
+        }, "Couldn't add your comment. Refresh the page and try again.");
         setBusy(form, false);
         if (!result.ok) {
             showStatus(status, result.error, 'error', result.sessionEnded);
@@ -364,7 +375,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 content : textarea.value,
                 is_anonymous : checkbox.checked
             })
-        });
+        }, "Couldn't add your reply. Refresh the page and try again.");
         setBusy(form, false);
         if (!result.ok) {
             showStatus(status, result.error, 'error', result.sessionEnded);
@@ -383,12 +394,15 @@ document.addEventListener('DOMContentLoaded', () => {
     async function deleteItem(btn, kind) {
         const isComment = kind === 'comment';
         const confirmed = await confirmAction(
-            isComment ? 'Delete this comment and its replies?'
-                      : 'Delete this reply?');
+            isComment
+                ? "Delete this comment and all of its replies? This can't be undone."
+                : "Delete this reply? This can't be undone.");
         if (!confirmed) return;
         const id = isComment ? btn.dataset.commentId : btn.dataset.replyId;
         btn.disabled = true;
-        const result = await send(`/api/${kind}/${id}`, {method : 'DELETE'});
+        const result = await send(
+            `/api/${kind}/${id}`, {method : 'DELETE'},
+            `Couldn't delete the ${kind}. Refresh the page and try again.`);
         btn.disabled = false;
         if (!result.ok) {
             showStatus(sectionStatus, result.error, 'error', result.sessionEnded);

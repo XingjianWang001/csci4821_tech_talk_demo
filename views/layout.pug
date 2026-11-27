@@ -11,16 +11,16 @@ html(lang="en")
 
         nav.navbar
             .nav-left
-                a.nav-brand(href="/") Q&amp;A Box Blog
+                a.nav-brand(href="/") Question Box Blog
             .nav-right
                 if user
                     span.welcome Welcome, #{user.username}!
                     if user.isAdmin
-                        span.admin-badge [Admin]
-                    a.nav-link(href="/post/new") New Post
-                    a.nav-link(href="/logout") Logout
+                        span.admin-badge Admin
+                    a.nav-link(href="/post/new") New Question Box
+                    a.nav-link(href="/logout") Log Out
                 else
-                    a.nav-link(href=loginHref) Login
+                    a.nav-link(href=loginHref) Log In
                     a.nav-link(href=registerHref) Register
 
         .container
@@ -30,13 +30,13 @@ html(lang="en")
                     li: a(href="/") Home
                     li: a(href="/?page=1") Browse All
                     if user
-                        li: a(href="/post/new") New Post
+                        li: a(href="/post/new") New Question Box
 
             main.content
                 block content
 
         footer.footer
-            p &copy; 2025 Q&amp;A Box Blog | CSCI4131 Final Project
+            p &copy; #{new Date().getFullYear()} Question Box Blog · CSCI4131 Final Project
             p Made with love by Shiba
 
         script(src="/js/main.js")
