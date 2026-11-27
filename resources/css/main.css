@@ -758,10 +758,44 @@ a:hover {
   margin-top: var(--space-2);
 }
 
-/* A quiet Delete with nothing before it lines up with the text above. */
-.reply-actions > .btn-delete-reply:first-child,
-.comment-actions > .btn-delete-comment:first-child {
+/* Thread actions are quiet text buttons, so a comment outweighs its
+ * actions. The first one lines up with the text above it, and each keeps a
+ * 40px hit area even though nothing is drawn around it at rest. */
+.comment-actions > .btn:first-child,
+.reply-actions > .btn:first-child {
   margin-left: calc(-1 * var(--space-3));
+}
+
+.comment-actions .btn,
+.reply-actions .btn {
+  min-height: 40px;
+}
+
+.btn.btn-reply {
+  /* Wide enough for "Replying…", so Delete doesn't move when it swaps in. */
+  min-width: 7.5em;
+  justify-content: flex-start;
+  background-color: transparent;
+  border-color: transparent;
+  color: var(--color-accent);
+}
+
+.btn.btn-reply:hover,
+.btn.btn-reply:focus-visible {
+  background-color: var(--color-secondary);
+  border-color: var(--color-border-strong);
+  color: var(--color-ink);
+}
+
+/* While its form is open, Reply stays in place as a quiet "Replying…"
+ * marker, so Delete never slides under the pointer. */
+.btn.btn-reply[aria-expanded="true"],
+.btn.btn-reply[aria-expanded="true"]:hover {
+  background-color: transparent;
+  border-color: transparent;
+  color: var(--color-ink-muted);
+  font-weight: var(--weight-regular);
+  cursor: default;
 }
 
 .reply-rule {

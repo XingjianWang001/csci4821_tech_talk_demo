@@ -290,13 +290,19 @@ document.addEventListener('DOMContentLoaded', () => {
         return [ header, reveal ];
     }
 
+    // Names used in accessible labels so each Reply/Delete is distinct.
+    function authorName(item) {
+        return item.is_anonymous ? 'Anonymous' : item.username;
+    }
+
     function buildReply(reply) {
         const replyEl = el('div', 'reply');
         replyEl.dataset.replyId = reply.id;
         const deleteBtn = el('button', 'btn btn-small btn-delete-reply', 'Delete');
         deleteBtn.type = 'button';
         deleteBtn.dataset.replyId = reply.id;
-        deleteBtn.setAttribute('aria-label', 'Delete reply');
+        deleteBtn.setAttribute('aria-label',
+                               `Delete reply by ${authorName(reply)}`);
         const actions = el('div', 'reply-actions');
         actions.append(deleteBtn);
         replyEl.append(...authorHeader('reply', reply),
@@ -314,15 +320,20 @@ document.addEventListener('DOMContentLoaded', () => {
             el('button', 'btn btn-small btn-delete-comment', 'Delete');
         deleteBtn.type = 'button';
         deleteBtn.dataset.commentId = comment.id;
-        deleteBtn.setAttribute('aria-label', 'Delete comment');
+        deleteBtn.setAttribute('aria-label',
+                               `Delete comment by ${authorName(comment)}`);
         // The author of a comment can always reply to it.
         const replyBtn = el('button', 'btn btn-small btn-reply', 'Reply');
         replyBtn.type = 'button';
         replyBtn.dataset.commentId = comment.id;
-        replyBtn.setAttribute('aria-label', 'Reply to comment');
+        replyBtn.setAttribute('aria-label',
+                              `Reply to comment by ${authorName(comment)}`);
+        replyBtn.setAttribute('aria-expanded', 'false');
+        replyBtn.setAttribute('aria-controls', `reply-form-${comment.id}`);
         actions.append(replyBtn, deleteBtn);
 
         const container = el('div', 'reply-form-container');
+        container.id = `reply-form-${comment.id}`;
         container.hidden = true;
         const form = el('form', 'reply-form');
         form.dataset.commentId = comment.id;
@@ -370,7 +381,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const container = commentEl.querySelector('.reply-form-container');
         const replyBtn = commentEl.querySelector('.btn-reply');
         container.hidden = false;
-        if (replyBtn) replyBtn.hidden = true;
+        if (replyBtn) {
+            replyBtn.setAttribute('aria-expanded', 'true');
+            replyBtn.textContent = 'Replying…';
+        }
         if (focus) container.querySelector('.reply-input').focus();
     }
 
@@ -384,7 +398,8 @@ document.addEventListener('DOMContentLoaded', () => {
         clearStatus(form.querySelector('.form-status'));
         drafts.remove(replyDraftKey(commentEl.dataset.commentId));
         if (replyBtn) {
-            replyBtn.hidden = false;
+            replyBtn.setAttribute('aria-expanded', 'false');
+            replyBtn.textContent = 'Reply';
             replyBtn.focus();
         }
     }
