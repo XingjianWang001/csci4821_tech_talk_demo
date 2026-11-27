@@ -294,11 +294,18 @@ document.addEventListener('DOMContentLoaded', () => {
             el('strong', 'author-name',
                item.is_anonymous ? 'Anonymous' : item.username),
             timeEl(`${kind}-date`, item));
-        if (!(item.is_anonymous && viewerIsAdmin)) return [ header ];
-        const reveal = el('p', 'real-user', 'Posted anonymously by ');
-        reveal.append(el('strong', '', item.username), ' ',
-                      el('span', 'real-user-note', '· only admins see this'));
-        return [ header, reveal ];
+        if (item.is_anonymous && viewerIsAdmin) {
+            const text = el('span', '', 'Posted anonymously by ');
+            text.append(el('strong', '', item.username),
+                        el('span', 'visually-hidden', ' (only admins see this)'));
+            const reveal = el('span', 'real-user');
+            const paw = pawIcon();
+            paw.setAttribute('width', '14');
+            paw.setAttribute('height', '14');
+            reveal.append(paw, text);
+            header.append(reveal);
+        }
+        return [ header ];
     }
 
     // Names used in accessible labels so each Reply/Delete is distinct.
@@ -388,10 +395,19 @@ document.addEventListener('DOMContentLoaded', () => {
         return commentEl;
     }
 
+    // While any reply form is open, Add Reply is the only filled button:
+    // the main comment form's button steps down to the secondary style.
+    function updateReplying() {
+        section.classList.toggle(
+            'is-replying',
+            Boolean(section.querySelector('.reply-form-container:not([hidden])')));
+    }
+
     function openReplyForm(commentEl, focus) {
         const container = commentEl.querySelector('.reply-form-container');
         const replyBtn = commentEl.querySelector('.btn-reply');
         container.hidden = false;
+        updateReplying();
         // Starting a new reply makes earlier "posted"/"deleted" lines stale.
         if (focus) clearStatuses(null);
         if (replyBtn) {
@@ -405,6 +421,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const replyBtn = commentEl.querySelector('.btn-reply');
         const form = container.querySelector('.reply-form');
         container.hidden = true;
+        updateReplying();
         form.querySelector('.reply-input').value = '';
         form.querySelector('.reply-anonymous-checkbox').checked = false;
         clearStatus(form.querySelector('.form-status'));
@@ -599,6 +616,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (child !== statusEl) child.remove();
         });
         commentEl.classList.add('is-removed');
+        updateReplying();
         changeCount(-1);
         report(statusEl, 'Comment deleted.', 'success');
         if (neighbour) {

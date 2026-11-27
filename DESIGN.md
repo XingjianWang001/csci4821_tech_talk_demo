@@ -256,7 +256,8 @@ Three roles that are distinct in fill as well as hue, so they can't be confused 
 - **Shape:** 6px corners, a 1px border, bold label. Links and buttons share one box (`inline-flex`, explicit line height, 44px min height; 40px for `.btn-small`), so Edit and Delete line up.
 - **Primary:** a red-tan fill with cream text (5.9:1). Use one per view: Publish / Save Changes, Log In, Register, Add Comment, Add Reply, Write the First One, Go Back Home. Hover deepens to Deep Red-Tan.
 - **Secondary:** the default button. A sesame-yellow fill, Shiba Black text and a Whisker outline. Used for Edit, Cancel and pagination. Hover goes to Deep Sesame.
-- **Destructive:** on a question box, a paper fill with a Warning Red outline and text, filling solid red on hover. On comments and replies, a quiet red text button that only gains its outline on hover or focus, and it always comes after Reply.
+- **Destructive:** in the confirm dialog, a paper fill with a Warning Red outline and text, filling solid red on hover. Everywhere else (question box, comments, replies) a quiet red text button that only gains its outline on hover or focus, and it always comes after Edit or Reply.
+- **One action language:** the question box's Edit/Delete use the same quiet text buttons as the thread and sit at the right of the meta row (wrapping below it on narrow screens), off the reading path.
 - **Thread actions (Reply, comment/reply Delete):** quiet text buttons, so a comment outweighs its actions. Reply is Shiba Black ink text that takes the sesame fill on hover or focus; Delete is Warning Red text that takes its outline on hover or focus, so in the thread ink means act and red means delete. Both keep a 40px hit area. While its form is open, Reply keeps its label and shows as pressed (sesame fill and outline, `aria-expanded="true"`); its width never changes, so Delete never moves. Accessible names include the author ("Reply to comment by demo_viewer").
 - **States:** hover, `:active` (1px press), `:focus-visible` (2px Deep Red-Tan outline, offset 2px) and `:disabled` (60% opacity, not-allowed cursor). While a request runs, the button says so ("Posting…", "Deleting…").
 - **Delete dialog:** a `<dialog>` with a Young Serif heading ("Delete this comment?") and a plain message that names what goes with it, mentioning replies only when there are some. Cancel has focus; Esc cancels.
@@ -265,6 +266,7 @@ Three roles that are distinct in fill as well as hue, so they can't be confused 
 - **Content surface:** Paper, with a 1px hairline border, 10px corners and 30px padding. It is the only container.
 - **Question boxes in the list:** not cards. Each is an `article` row divided by hairlines; the title link's `::after` covers the whole row, so the row is one link target. Keyboard focus outlines the whole row. The preview is cut on a word boundary (200-character budget) and clamped to three lines.
 - **Comment count:** the thread's heading leads with the count as a red-tan Young Serif numeral at `--text-xl`, then "comment"/"comments" at `--text-lg` (`main.js` keeps both in sync).
+- **One composer at a time:** while any reply form is open, Add Comment steps down to the secondary look, so Add Reply is the only filled button.
 - **Comment thread order:** the count heading (with a "Write a comment" jump link when there are comments), then the comments, then the "Leave a Comment" form, or the guest's log-in prompt, closing the thread after a hairline and `--space-6`. Reading comes before writing; a new comment lands just above the form.
 - **Comments and replies:** rows divided by hairlines. Replies are indented 24px under their comment with dashed dividers. A just-posted comment or reply gets a short Sun Wash tint.
 
@@ -278,10 +280,10 @@ Three roles that are distinct in fill as well as hue, so they can't be confused 
 - **Admin badge:** a Shiba Black pill with a Tan on Black paw and the label "Admin". It is the one dark element on the page, so admin mode is unmistakable.
 
 ### Admin reveal
-On an anonymous comment or reply, admins see a tag under the author line: "Posted anonymously by **name** · only admins see this". It is a dashed red-tan outline on Sun Wash with Deep Red-Tan text (about 7:1), never stray text in the header row.
+On an anonymous comment or reply, admins see a small pill in the author line: a paw and "Posted anonymously by **name**", in the Admin badge's Shiba Black and Tan on Black, so it reads as admin-only at a glance ("only admins see this" is in the accessible name).
 
 ### Flash messages
-Below the header, inside the page column, above the content surface. On narrow pages (login, register, 404) it narrows to the 440px card under it. Success flashes start with the paw, the same acknowledgement as a posted comment. A 1px border in the status color over its wash, bold text, and a dismiss (×) button; dismissing moves focus to the page heading. Errors use `role="alert"`, everything else `role="status"`. Success uses Leaf Green on Leaf Wash, error uses Deep Warning Red on Warn Wash with a Warning Red border, and info uses Shiba Black on Sun Wash.
+Below the header, inside the page column, above the content surface. On narrow pages (login, register, 404) it narrows to the 440px card under it. Success flashes start with the paw, the same acknowledgement as a posted comment. Logging in, publishing and logging out ("You're logged out. See you next time!") all get one. A 1px border in the status color over its wash, bold text, and a dismiss (×) button; dismissing moves focus to the page heading. Errors use `role="alert"`, everything else `role="status"`. Success uses Leaf Green on Leaf Wash, error uses Deep Warning Red on Warn Wash with a Warning Red border, and info uses Shiba Black on Sun Wash.
 
 ## Shiba Motif
 

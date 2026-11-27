@@ -176,6 +176,32 @@ a:hover {
   outline-offset: 2px;
 }
 
+/* Keyboard users can jump past the header; visible only when focused. */
+.skip-link {
+  position: absolute;
+  top: var(--space-2);
+  left: var(--space-2);
+  z-index: 10;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-control);
+  background-color: var(--color-ink);
+  color: var(--color-on-accent);
+  font-weight: var(--weight-bold);
+  transform: translateY(-200%);
+}
+
+.skip-link:focus {
+  transform: none;
+}
+
+.skip-link:hover {
+  color: var(--color-on-accent);
+}
+
+main:focus {
+  outline: none;
+}
+
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -656,12 +682,22 @@ a:hover {
   font-style: italic;
 }
 
+.post-header-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-4);
+}
+
 .post-actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-2);
-  margin-top: var(--space-4);
+  /* Text buttons: pull out by their padding so the words align with the
+   * column edges, whether the row sits right of the meta or wraps below. */
+  margin-inline: calc(-1 * var(--space-3));
 }
 
 .inline-form {
@@ -734,6 +770,19 @@ a:hover {
   scroll-margin-top: var(--space-6);
 }
 
+/* While a reply form is open, Add Reply is the only filled button on the
+ * page; Add Comment steps down to the secondary look until it closes. */
+.comments-section.is-replying #comment-form .btn-primary {
+  background-color: var(--color-secondary);
+  border-color: var(--color-border-strong);
+  color: var(--color-ink);
+}
+
+.comments-section.is-replying #comment-form .btn-primary:hover {
+  background-color: var(--color-secondary-hover);
+  color: var(--color-ink);
+}
+
 #leave-comment:focus {
   outline: none;
 }
@@ -782,22 +831,23 @@ a:hover {
   color: var(--color-ink-muted);
 }
 
-/* The admin's anonymous-author reveal: a deliberate tag, not stray text. */
+/* The admin's anonymous-author reveal: a small pill in the author line,
+ * in the Admin badge's dark-and-tan, so it reads as admin-only at a glance. */
 .real-user {
-  width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
   max-width: 100%;
-  margin-block: var(--space-1) var(--space-2);
-  padding: 2px var(--space-2);
-  border: 1px dashed var(--color-accent);
-  border-radius: var(--radius-badge);
-  background-color: var(--color-info-bg);
-  color: var(--color-accent-hover);
+  padding-inline: var(--space-2);
+  border-radius: var(--radius-pill);
+  background-color: var(--color-ink);
+  color: var(--color-accent-on-dark);
   font-size: var(--text-xs);
   overflow-wrap: anywhere;
 }
 
-.real-user-note {
-  color: var(--color-ink-muted);
+.real-user strong {
+  color: var(--color-on-accent);
 }
 
 .comment-content,
@@ -838,7 +888,8 @@ a:hover {
   min-height: 40px;
 }
 
-.btn.btn-reply {
+.btn.btn-reply,
+.post-actions .btn-edit {
   /* Ink, not red-tan: in the thread, ink means "act" and Warning Red means
    * "delete", so the two can't blur together under video compression. */
   background-color: transparent;
@@ -847,7 +898,9 @@ a:hover {
 }
 
 .btn.btn-reply:hover,
-.btn.btn-reply:focus-visible {
+.btn.btn-reply:focus-visible,
+.post-actions .btn-edit:hover,
+.post-actions .btn-edit:focus-visible {
   background-color: var(--color-secondary);
   border-color: var(--color-border-strong);
   color: var(--color-ink);
@@ -1125,7 +1178,8 @@ a:hover {
 }
 
 .btn-delete-comment,
-.btn-delete-reply {
+.btn-delete-reply,
+.post-actions .btn-delete {
   background-color: transparent;
   border-color: transparent;
   color: var(--color-destructive);
@@ -1135,7 +1189,9 @@ a:hover {
 .btn-delete-comment:hover,
 .btn-delete-reply:hover,
 .btn-delete-comment:focus-visible,
-.btn-delete-reply:focus-visible {
+.btn-delete-reply:focus-visible,
+.post-actions .btn-delete:hover,
+.post-actions .btn-delete:focus-visible {
   background-color: var(--color-surface);
   border-color: var(--color-destructive);
   color: var(--color-destructive-hover);

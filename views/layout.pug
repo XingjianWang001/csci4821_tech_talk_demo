@@ -15,6 +15,7 @@ html(lang="en")
     block vars
     body(data-clear-draft=clearDraft)
         - var current = (href) => currentPath === href ? 'page' : undefined
+        a.skip-link(href="#main") Skip to content
         header.navbar
             nav.navbar-inner(aria-label="Main")
                 a.nav-brand(href="/" aria-current=current('/'))
@@ -37,7 +38,7 @@ html(lang="en")
         //- An optional hero that continues the header band (home only).
         block hero
 
-        main.page
+        main.page#main(tabindex="-1")
             if message
                 .message(class=[messageType, pageWidth === 'narrow' ? 'message--narrow' : null] role=messageType === 'error' ? 'alert' : 'status')
                     if messageType === 'success'

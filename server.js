@@ -240,9 +240,15 @@ app.post('/login', async (req, res) => {
     res.redirect(takeReturnTo(req));
 });
 
-app.get('/logout', (req, res) => {
-    req.session.destroy();
-    res.redirect('/');
+app.get('/logout', (req, res, next) => {
+    // A fresh, empty session carries the goodbye flash; the old one (and
+    // everything in it) is gone.
+    req.session.regenerate((err) => {
+        if (err) return next(err);
+        req.session.message = "You're logged out. See you next time!";
+        req.session.messageType = 'success';
+        res.redirect('/');
+    });
 });
 
 app.get(

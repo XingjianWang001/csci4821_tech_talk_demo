@@ -14,7 +14,7 @@ block content
 
             .form-group
                 label(for="content") Content
-                textarea#content(name="content" rows="15" required)= post ? post.content : ''
+                textarea#content(name="content" rows="10" required)= post ? post.content : ''
 
             .form-actions
                 button.btn.btn-primary(type="submit")= isEdit ? 'Save Changes' : 'Publish'

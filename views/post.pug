@@ -9,8 +9,12 @@ mixin authorLine(item, kind)
     .author-line(class=`${kind}-header`)
         strong.author-name= item.is_anonymous ? 'Anonymous' : item.username
         time(class=`${kind}-date` datetime=isoDate(item.created_at))= formatDate(item.created_at)
-    if item.is_anonymous && user && user.isAdmin
-        p.real-user Posted anonymously by #[strong= item.username] #[span.real-user-note · only admins see this]
+        //- The admin's reveal: a small dark pill in the author line, in the
+        //- same dark-and-tan as the Admin badge, so it reads as admin-only.
+        if item.is_anonymous && user && user.isAdmin
+            span.real-user
+                +paw()
+                span Posted anonymously by #[strong= item.username]#[span.visually-hidden= ' (only admins see this)']
 
 block content
     - var anonymityHint = 'Hidden from other readers. Admins can still see who wrote it.'
@@ -18,18 +22,23 @@ block content
     article.post-detail
         header.post-header
             h1= post.title
-            p.post-meta
-                span.post-meta-items
-                    span.author by #{post.author_name}
-                    time.date(datetime=isoDate(post.created_at))= formatDate(post.created_at)
-                    if post.updated_at
-                        span.updated edited #[time(datetime=isoDate(post.updated_at))= formatDate(post.updated_at)]
+            //- Meta on the left, the owner's actions on the right: off the
+            //- reading path, in the same quiet text style as the thread.
+            .post-header-row
+                p.post-meta
+                    span.post-meta-items
+                        span.author by #{post.author_name}
+                        time.date(datetime=isoDate(post.created_at))= formatDate(post.created_at)
+                        if post.updated_at
+                            span.updated edited #[time(datetime=isoDate(post.updated_at))= formatDate(post.updated_at)]
 
-            if user && (user.id === post.author_id || user.isAdmin)
-                .post-actions
-                    a.btn.btn-edit(href=`/post/${post.id}/edit`) Edit
-                    form.inline-form(action=`/post/${post.id}/delete` method="POST" data-confirm-title="Delete this question box?" data-confirm=`“${post.title}” and all of its comments and replies will be deleted. This can't be undone.`)
-                        button.btn.btn-delete(type="submit") Delete
+                if user && (user.id === post.author_id || user.isAdmin)
+                    - var n = comments.length
+                    - var deleteMessage = n === 0 ? `“${post.title}” will be deleted. This can't be undone.` : `“${post.title}” and its ${n === 1 ? 'comment' : `${n} comments`}, with any replies, will be deleted. This can't be undone.`
+                    .post-actions
+                        a.btn.btn-small.btn-edit(href=`/post/${post.id}/edit` aria-label="Edit this question box") Edit
+                        form.inline-form(action=`/post/${post.id}/delete` method="POST" data-confirm-title="Delete this question box?" data-confirm=deleteMessage)
+                            button.btn.btn-small.btn-delete(type="submit" aria-label="Delete this question box") Delete
 
         .post-content= post.content
 
