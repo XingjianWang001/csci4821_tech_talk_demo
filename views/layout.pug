@@ -6,38 +6,32 @@ html(lang="en")
         title= title
         link(rel="stylesheet" href="/css/main.css")
     body(data-clear-draft=clearDraft)
-        if message
-            .message(class=messageType)= message
-
-        nav.navbar
-            .nav-left
-                a.nav-brand(href="/") Question Box Blog
-            .nav-right
-                if user
-                    span.welcome Welcome, #{user.username}!
-                    if user.isAdmin
-                        span.admin-badge Admin
-                    a.nav-link(href="/post/new") New Question Box
-                    a.nav-link(href="/logout") Log Out
-                else
-                    a.nav-link(href=loginHref) Log In
-                    a.nav-link(href=registerHref) Register
-
-        .container
-            aside.sidebar
-                h3 Navigation
-                ul.nav-menu
-                    li: a(href="/") Home
-                    li: a(href="/?page=1") Browse All
+        - var current = (href) => currentPath === href ? 'page' : undefined
+        header.navbar
+            nav.navbar-inner(aria-label="Main")
+                a.nav-brand(href="/" aria-current=current('/')) Question Box Blog
+                .nav-right
                     if user
-                        li: a(href="/post/new") New Question Box
+                        span.nav-user
+                            span.welcome Welcome, #{user.username}!
+                            if user.isAdmin
+                                span.admin-badge Admin
+                        a.nav-link(href="/post/new" aria-current=current('/post/new')) New Question Box
+                        a.nav-link(href="/logout") Log Out
+                    else
+                        a.nav-link(href=loginHref aria-current=current('/login')) Log In
+                        a.nav-link(href=registerHref aria-current=current('/register')) Register
 
-            main.content
+        main.page
+            if message
+                .message(class=messageType role=messageType === 'error' ? 'alert' : 'status')= message
+            .content(class=pageWidth === 'narrow' ? 'content--narrow' : undefined)
                 block content
 
         footer.footer
-            p &copy; #{new Date().getFullYear()} Question Box Blog · CSCI4131 Final Project
-            p Made with love by Shiba
+            .footer-inner
+                p &copy; #{new Date().getFullYear()} Question Box Blog · CSCI4131 Final Project
+                p Made with love by Shiba
 
         script(src="/js/main.js")
         block scripts
