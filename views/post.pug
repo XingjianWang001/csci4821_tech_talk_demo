@@ -28,25 +28,12 @@ block content
         .post-content= post.content
 
     section.comments-section(aria-labelledby="comments-heading" data-viewer-admin=user && user.isAdmin ? 'true' : false)
-        h2#comments-heading(tabindex="-1") Comments (#[span#comment-count= comments.length])
+        //- Reading order: the conversation first, then the form to join it.
+        .comments-header
+            h2#comments-heading(tabindex="-1") Comments (#[span#comment-count= comments.length])
+            if user && comments.length > 0
+                a.comments-jump(href="#leave-comment") Write a comment
 
-        if user
-            .comment-form
-                h3 Leave a Comment
-                form#comment-form(data-post-id=post.id)
-                    label.visually-hidden(for="comment-content") Your comment
-                    textarea#comment-content(name="content" placeholder="Write your comment here…" required)
-                    .form-row
-                        .anon-field
-                            label
-                                input#anonymous-checkbox(type="checkbox" name="is_anonymous" aria-describedby="anonymous-hint")
-                                |  Comment anonymously
-                            p.field-hint#anonymous-hint= anonymityHint
-                        button.btn.btn-primary(type="submit") Add Comment
-                    p.form-status(role="status")
-        else
-            .login-prompt
-                p #[a(href=loginHref) Log in] or #[a(href=registerHref) register] to leave a comment.
 
         .comments-list
             if comments.length === 0
@@ -92,6 +79,24 @@ block content
                         //- Results for this comment and its replies (reply posted,
                         //- deleted, failed) are announced here, next to the change.
                         p.form-status.comment-status(role="status")
+
+        if user
+            .comment-form
+                h3#leave-comment(tabindex="-1") Leave a Comment
+                form#comment-form(data-post-id=post.id)
+                    label.visually-hidden(for="comment-content") Your comment
+                    textarea#comment-content(name="content" placeholder="Write your comment here…" required)
+                    .form-row
+                        .anon-field
+                            label
+                                input#anonymous-checkbox(type="checkbox" name="is_anonymous" aria-describedby="anonymous-hint")
+                                |  Comment anonymously
+                            p.field-hint#anonymous-hint= anonymityHint
+                        button.btn.btn-primary(type="submit") Add Comment
+                    p.form-status(role="status")
+        else
+            .login-prompt
+                p #[a(href=loginHref) Log in] or #[a(href=registerHref) register] to leave a comment.
 
     dialog#confirm-dialog(aria-labelledby="confirm-dialog-message")
         form(method="dialog")

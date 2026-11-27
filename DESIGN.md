@@ -262,6 +262,7 @@ Three roles that are distinct in fill as well as hue, so they can't be confused 
 ### Cards / Containers
 - **Content surface:** Paper, with a 1px hairline border, 10px corners and 30px padding. It is the only container.
 - **Question boxes in the list:** not cards. Each is an `article` row divided by hairlines; the title link's `::after` covers the whole row, so the row is one link target. Keyboard focus outlines the whole row. The preview is cut on a word boundary (200-character budget) and clamped to three lines.
+- **Comment thread order:** the "Comments (N)" heading (with a "Write a comment" jump link when there are comments), then the comments, then the "Leave a Comment" form, or the guest's log-in prompt, closing the thread after a hairline and `--space-6`. Reading comes before writing; a new comment lands just above the form.
 - **Comments and replies:** rows divided by hairlines. Replies are indented 24px under their comment with dashed dividers. A just-posted comment or reply gets a short Sun Wash tint.
 
 ### Inputs / Fields

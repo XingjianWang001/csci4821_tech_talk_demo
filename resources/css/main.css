@@ -630,8 +630,19 @@ a:hover {
   border-top: 1px solid var(--color-border);
 }
 
-.comments-section h2 {
-  margin-bottom: var(--space-4);
+/* Heading row: the count, and a jump to the form at the end of the thread. */
+.comments-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+  margin-bottom: var(--space-2);
+}
+
+.comments-jump {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
 }
 
 #comments-heading:focus {
@@ -643,8 +654,21 @@ a:hover {
   outline-offset: 2px;
 }
 
-.comment-form {
-  margin-bottom: var(--space-6);
+/* Joining in comes after reading: the form (or the guest's log-in prompt)
+ * closes the thread, set apart by space and a hairline. */
+.comment-form,
+.login-prompt {
+  margin-top: var(--space-6);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--color-border);
+}
+
+#leave-comment {
+  scroll-margin-top: var(--space-6);
+}
+
+#leave-comment:focus {
+  outline: none;
 }
 
 .comment-form h3 {
@@ -652,7 +676,6 @@ a:hover {
 }
 
 .login-prompt {
-  margin-bottom: var(--space-6);
   color: var(--color-ink-muted);
 }
 

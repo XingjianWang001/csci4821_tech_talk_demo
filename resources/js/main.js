@@ -402,6 +402,21 @@ document.addEventListener('DOMContentLoaded', () => {
         form.setAttribute('aria-busy', busy ? 'true' : 'false');
     }
 
+    // "Write a comment" jumps to the form at the end of the thread and puts
+    // the cursor in it.
+    const jump = section.querySelector('.comments-jump');
+    const commentBox = document.getElementById('comment-content');
+    if (jump && commentBox) {
+        jump.addEventListener('click', (e) => {
+            e.preventDefault();
+            commentBox.scrollIntoView({
+                block : 'center',
+                behavior : prefersReducedMotion ? 'auto' : 'smooth'
+            });
+            commentBox.focus({preventScroll : true});
+        });
+    }
+
     // Restore drafts left behind by an expired session or a reload.
     const commentForm = document.getElementById('comment-form');
     if (commentForm) {
