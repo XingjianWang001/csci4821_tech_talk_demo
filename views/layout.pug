@@ -1,0 +1,42 @@
+doctype html
+html(lang="en")
+    head
+        meta(charset="UTF-8")
+        meta(name="viewport" content="width=device-width, initial-scale=1.0")
+        title= title
+        link(rel="stylesheet" href="/css/main.css")
+    body
+        if message
+            .message(class=messageType)= message
+
+        nav.navbar
+            .nav-left
+                a.nav-brand(href="/") Q&amp;A Box Blog
+            .nav-right
+                if user
+                    span.welcome Welcome, #{user.username}!
+                    if user.isAdmin
+                        span.admin-badge [Admin]
+                    a.nav-link(href="/post/new") New Post
+                    a.nav-link(href="/logout") Logout
+                else
+                    a.nav-link(href="/login") Login
+                    a.nav-link(href="/register") Register
+
+        .container
+            aside.sidebar
+                h3 Navigation
+                ul.nav-menu
+                    li: a(href="/") Home
+                    li: a(href="/?page=1") Browse All
+                    if user
+                        li: a(href="/post/new") New Post
+
+            main.content
+                block content
+
+        footer.footer
+            p &copy; 2025 Q&amp;A Box Blog | CSCI4131 Final Project
+            p Made with love by Shiba
+
+        block scripts

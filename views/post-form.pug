@@ -1,0 +1,18 @@
+extends layout
+
+block content
+    .form-container
+        h1= isEdit ? 'Edit Question Box' : 'New Question Box'
+
+        form.post-form(action=isEdit ? `/post/${post.id}/edit` : '/post/new' method="POST")
+            .form-group
+                label(for="title") Title
+                input#title(type="text" name="title" value=post ? post.title : '' required)
+
+            .form-group
+                label(for="content") Content
+                textarea#content(name="content" rows="15" required)= post ? post.content : ''
+
+            .form-actions
+                button.btn.btn-primary(type="submit")= isEdit ? 'Update' : 'Publish'
+                a.btn.btn-secondary(href=post ? `/post/${post.id}` : '/') Cancel
