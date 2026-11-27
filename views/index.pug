@@ -2,36 +2,34 @@ extends layout
 
 block content
     h1 Recent Question Boxes
-    p.home-intro A question box is a blog post: someone writes it, and readers respond in the comments.
+    p.home-intro A question box is a blog post: someone writes it, readers respond in the comments, and the shiba keeps watch.
 
     if posts.length === 0
-        .no-posts
-            p No question boxes yet.
+        .empty-state
+            +shibaMark({mood: 'sleepy', size: 96})
+            p.empty-state-title No question boxes yet. The shiba is napping until someone writes one.
             if user
                 a.btn.btn-primary(href="/post/new") Write the First One
             else
-                p #[a(href="/login") Log in] or #[a(href="/register") register] to write the first one.
+                p #[a(href=loginHref) Log in] or #[a(href=registerHref) register] to write the first one.
     else
-        .posts-grid
+        ol.post-list
             each post in posts
                 - var commentCount = Number(post.comment_count) || 0
-                .post-card
-                    h2.post-title
-                        a(href=`/post/${post.id}`)= post.title
-                    .post-meta
-                        span.author by #{post.author_name}
-                        span.date= new Date(post.created_at).toLocaleDateString()
-                        span.comment-count= commentCount === 1 ? '1 comment' : `${commentCount} comments`
-                    .post-preview
-                        - var preview = post.content.substring(0, 200)
-                        - var needsEllipsis = post.content.length > 200
-                        p= preview + (needsEllipsis ? '...' : '')
-                    a.read-more(href=`/post/${post.id}`) Read Question Box
+                li
+                    article.post-card
+                        h2.post-title
+                            a(href=`/post/${post.id}`)= post.title
+                        p.post-meta
+                            span.author by #{post.author_name}
+                            time.date(datetime=isoDate(post.created_at))= formatDate(post.created_at)
+                            span.comment-count= commentCount === 1 ? '1 comment' : `${commentCount} comments`
+                        p.post-preview= excerpt(post.content)
 
     if totalPages > 1
         nav.pagination(aria-label="Question box pages")
             if currentPage > 1
-                a.page-btn(href=`/?page=${currentPage - 1}`) ← Newer
+                a.page-btn(href=`/?page=${currentPage - 1}` rel="prev") ← Newer
             span.page-info Page #{currentPage} of #{totalPages}
             if currentPage < totalPages
-                a.page-btn(href=`/?page=${currentPage + 1}`) Older →
+                a.page-btn(href=`/?page=${currentPage + 1}` rel="next") Older →

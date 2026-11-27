@@ -60,7 +60,46 @@ function takeReturnTo(req) {
     return target;
 }
 
+// One date format for question boxes, comments and replies: no seconds.
+// The comment and reply APIs send created_label from this too, so items
+// added in the browser show the same clock time as server-rendered ones.
+const dateFormat = new Intl.DateTimeFormat('en-US', {
+    month : 'short',
+    day : 'numeric',
+    year : 'numeric',
+    hour : 'numeric',
+    minute : '2-digit'
+});
+
+function formatDate(value) {
+    const date = value instanceof Date ? value : new Date(value);
+    return Number.isNaN(date.getTime()) ? '' : dateFormat.format(date);
+}
+
+// List previews: whitespace collapsed, cut on a word boundary within the
+// 200-character budget.
+function excerpt(text, limit = 200) {
+    const flat = String(text).replace(/\s+/g, ' ').trim();
+    if (flat.length <= limit) return flat;
+    const cut = flat.slice(0, limit);
+    const lastSpace = cut.lastIndexOf(' ');
+    // A single huge word has no boundary to cut on; cut it mid-word.
+    const end = lastSpace > limit / 2 ? lastSpace : limit;
+    return cut.slice(0, end).replace(/[\s.,;:!?-]+$/, '') + '…';
+}
+
+// For <time datetime>: '' instead of a RangeError on an unparsable date.
+function isoDate(value) {
+    const date = value instanceof Date ? value : new Date(value);
+    return Number.isNaN(date.getTime()) ? '' : date.toISOString();
+}
+
+app.locals.formatDate = formatDate;
+app.locals.isoDate = isoDate;
+app.locals.excerpt = excerpt;
+
 app.use((req, res, next) => {
+    res.locals.currentPath = req.path;
     res.locals.user = req.session.user;
     res.locals.message = req.session.message;
     res.locals.messageType = req.session.messageType;
@@ -348,7 +387,8 @@ app.post('/api/comment', requireApiLogin, async (req, res) => {
                 is_anonymous : comment.is_anonymous,
                 username : comment.username,
                 user_id : comment.user_id,
-                created_at : comment.created_at
+                created_at : comment.created_at,
+                created_label : formatDate(comment.created_at)
             }
         });
     } catch (error) {
@@ -407,7 +447,8 @@ app.post('/api/reply', requireApiLogin, async (req, res) => {
                 is_anonymous : reply.is_anonymous,
                 username : reply.username,
                 user_id : reply.user_id,
-                created_at : reply.created_at
+                created_at : reply.created_at,
+                created_label : formatDate(reply.created_at)
             }
         });
     } catch (error) {

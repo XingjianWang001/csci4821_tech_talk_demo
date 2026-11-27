@@ -1,16 +1,23 @@
 extends layout
 
+mixin authorLine(item, kind)
+    .author-line(class=`${kind}-header`)
+        strong.author-name= item.is_anonymous ? 'Anonymous' : item.username
+        time(class=`${kind}-date` datetime=isoDate(item.created_at))= formatDate(item.created_at)
+    if item.is_anonymous && user && user.isAdmin
+        p.real-user Posted anonymously by #[strong= item.username] #[span.real-user-note · only admins see this]
+
 block content
     - var anonymityHint = 'Hidden from other readers. Admins can still see who wrote it.'
     - var replyRule = 'Only the question box author, the commenter or an admin can reply.'
     article.post-detail
-        .post-header
+        header.post-header
             h1= post.title
-            .post-meta
+            p.post-meta
                 span.author by #{post.author_name}
-                span.date= new Date(post.created_at).toLocaleDateString()
+                time.date(datetime=isoDate(post.created_at))= formatDate(post.created_at)
                 if post.updated_at
-                    span.updated (edited)
+                    span.updated edited #[time(datetime=isoDate(post.updated_at))= formatDate(post.updated_at)]
 
             if user && (user.id === post.author_id || user.isAdmin)
                 .post-actions
@@ -20,15 +27,16 @@ block content
 
         .post-content= post.content
 
-    section.comments-section(data-viewer-admin=user && user.isAdmin ? 'true' : false)
+    section.comments-section(aria-labelledby="comments-heading" data-viewer-admin=user && user.isAdmin ? 'true' : false)
         h2#comments-heading(tabindex="-1") Comments (#[span#comment-count= comments.length])
         p#comments-status.form-status(role="status")
 
         if user
             .comment-form
-                h3#comment-form-heading Leave a Comment
+                h3 Leave a Comment
                 form#comment-form(data-post-id=post.id)
-                    textarea#comment-content(name="content" placeholder="Write your comment here..." aria-labelledby="comment-form-heading" required)
+                    label.visually-hidden(for="comment-content") Your comment
+                    textarea#comment-content(name="content" placeholder="Write your comment here…" required)
                     .form-row
                         .anon-field
                             label
@@ -47,51 +55,44 @@ block content
             else
                 each comment in comments
                     .comment(data-comment-id=comment.id data-post-id=post.id data-comment-author-id=comment.user_id)
-                        .comment-header
-                            span.author-name
-                                strong= comment.is_anonymous ? 'Anonymous' : comment.username
-                                if comment.is_anonymous && user && user.isAdmin
-                                    span.real-user Written by #{comment.username} · only admins see this
-                            span.comment-date= new Date(comment.created_at).toLocaleString()
+                        +authorLine(comment, 'comment')
                         .comment-content= comment.content
                         .comment-actions
-                            if user && (user.id === comment.user_id || user.isAdmin)
-                                button.btn.btn-small.btn-delete-comment(data-comment-id=comment.id aria-label="Delete comment") Delete
                             if user && (user.id === post.author_id || user.id === comment.user_id || user.isAdmin)
-                                button.btn.btn-small.btn-reply(data-comment-id=comment.id aria-label="Reply to comment") Reply
+                                button.btn.btn-small.btn-reply(type="button" data-comment-id=comment.id aria-label="Reply to comment") Reply
                             else if user
                                 p.reply-rule= replyRule
+                            if user && (user.id === comment.user_id || user.isAdmin)
+                                button.btn.btn-small.btn-delete-comment(type="button" data-comment-id=comment.id aria-label="Delete comment") Delete
 
-                        .reply-form-container(style="display: none;")
+                        .reply-form-container(hidden)
                             form.reply-form(data-comment-id=comment.id)
-                                textarea.reply-content(name="content" placeholder="Write your reply..." aria-label="Your reply" required)
+                                label.visually-hidden(for=`reply-input-${comment.id}`) Your reply
+                                textarea.reply-input(id=`reply-input-${comment.id}` name="content" placeholder="Write your reply…" required)
                                 .form-row
                                     .anon-field
                                         label
                                             input.reply-anonymous-checkbox(type="checkbox" name="is_anonymous" aria-describedby=`reply-anonymous-hint-${comment.id}`)
                                             |  Reply anonymously
                                         p.field-hint(id=`reply-anonymous-hint-${comment.id}`)= anonymityHint
-                                    button.btn.btn-small.btn-primary(type="submit") Add Reply
-                                    button.btn.btn-small.btn-cancel-reply(type="button") Cancel
+                                    .form-buttons
+                                        button.btn.btn-small.btn-primary(type="submit") Add Reply
+                                        button.btn.btn-small.btn-cancel-reply(type="button") Cancel
                                 p.form-status(role="status")
 
                         if comment.replies && comment.replies.length > 0
                             .replies-list
                                 each reply in comment.replies
                                     .reply(data-reply-id=reply.id)
-                                        .reply-header
-                                            span.author-name
-                                                strong= reply.is_anonymous ? 'Anonymous' : reply.username
-                                                if reply.is_anonymous && user && user.isAdmin
-                                                    span.real-user Written by #{reply.username} · only admins see this
-                                            span.reply-date= new Date(reply.created_at).toLocaleString()
+                                        +authorLine(reply, 'reply')
                                         .reply-content= reply.content
                                         if user && (user.id === reply.user_id || user.isAdmin)
-                                            button.btn.btn-small.btn-delete-reply(data-reply-id=reply.id aria-label="Delete reply") Delete
+                                            .reply-actions
+                                                button.btn.btn-small.btn-delete-reply(type="button" data-reply-id=reply.id aria-label="Delete reply") Delete
 
     dialog#confirm-dialog(aria-labelledby="confirm-dialog-message")
         form(method="dialog")
             p#confirm-dialog-message
-            .form-row
+            .form-row.dialog-actions
                 button.btn.btn-secondary(type="submit" value="cancel" autofocus) Cancel
                 button.btn.btn-delete(type="submit" value="confirm") Delete

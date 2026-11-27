@@ -1,4 +1,4 @@
-// Client behavior for the Q&A Box Blog.
+// Client behavior for the Question Box Blog.
 // Rule: user content only ever reaches the page through textContent, never
 // through innerHTML or insertAdjacentHTML, so typed HTML shows up as text.
 document.addEventListener('DOMContentLoaded', () => {
@@ -39,6 +39,60 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const prefersReducedMotion =
         window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // The server formats dates (created_label) so AJAX-added items match
+    // server-rendered ones regardless of the browser's time zone.
+    function timeEl(className, item) {
+        const node = document.createElement('time');
+        node.className = className;
+        node.textContent = item.created_label || '';
+        const date = new Date(item.created_at);
+        if (!Number.isNaN(date.getTime())) node.dateTime = date.toISOString();
+        return node;
+    }
+
+    // Flash messages can be dismissed. Focus moves to the page heading so
+    // keyboard users aren't dropped at the top of the document.
+    document.querySelectorAll('.message-dismiss').forEach(btn => {
+        btn.addEventListener('click', () => {
+            btn.closest('.message').remove();
+            const pageHeading = document.querySelector('main h1');
+            if (pageHeading) {
+                pageHeading.setAttribute('tabindex', '-1');
+                pageHeading.focus();
+            }
+        });
+    });
+
+    // A small decorative paw for posted acknowledgements. Matches the paw
+    // mixin in views/mixins/shiba.pug.
+    function pawIcon() {
+        const ns = 'http://www.w3.org/2000/svg';
+        const svg = document.createElementNS(ns, 'svg');
+        const attrs = {
+            class : 'paw',
+            viewBox : '0 0 24 24',
+            width : '16',
+            height : '16',
+            'aria-hidden' : 'true',
+            focusable : 'false'
+        };
+        Object.entries(attrs).forEach(([ k, v ]) => svg.setAttribute(k, v));
+        const shapes = [
+            [ 'ellipse', {cx : 12, cy : 16, rx : 5.5, ry : 4.5} ],
+            [ 'circle', {cx : 5.5, cy : 10, r : 2.3} ],
+            [ 'circle', {cx : 9.5, cy : 5.8, r : 2.3} ],
+            [ 'circle', {cx : 14.5, cy : 5.8, r : 2.3} ],
+            [ 'circle', {cx : 18.5, cy : 10, r : 2.3} ]
+        ];
+        shapes.forEach(([ tag, shapeAttrs ]) => {
+            const shape = document.createElementNS(ns, tag);
+            Object.entries(shapeAttrs)
+                .forEach(([ k, v ]) => shape.setAttribute(k, String(v)));
+            svg.append(shape);
+        });
+        return svg;
+    }
 
     // Accessible replacement for confirm(). Falls back to confirm() only in
     // browsers without <dialog>.
@@ -113,10 +167,12 @@ document.addEventListener('DOMContentLoaded', () => {
         return {ok : true, data};
     }
 
-    // Inline, announced feedback instead of alert().
-    function showStatus(statusEl, message, type, sessionEnded) {
+    // Inline, announced feedback instead of alert(). Posted acknowledgements
+    // pass options.paw to get the Shiba paw.
+    function showStatus(statusEl, message, type, sessionEnded, options) {
         if (!statusEl) return;
         statusEl.replaceChildren(message);
+        if (options && options.paw) statusEl.prepend(pawIcon());
         statusEl.dataset.type = type;
         if (sessionEnded) {
             const link = document.createElement('a');
@@ -194,18 +250,19 @@ document.addEventListener('DOMContentLoaded', () => {
         return node;
     }
 
-    function authorHeader(className, dateClass, item) {
-        const header = el('div', className);
-        const author = el('span', 'author-name');
-        author.append(el('strong', '', item.is_anonymous ? 'Anonymous'
-                                                         : item.username));
-        if (item.is_anonymous && viewerIsAdmin) {
-            author.append(el('span', 'real-user',
-                             `Written by ${item.username} · only admins see this`));
-        }
-        header.append(author, el('span', dateClass,
-                         new Date(item.created_at).toLocaleString()));
-        return header;
+    // Mirrors the authorLine mixin in views/post.pug: the header line, plus
+    // the admin's anonymous-author reveal under it. Returns a node list.
+    function authorHeader(kind, item) {
+        const header = el('div', `author-line ${kind}-header`);
+        header.append(
+            el('strong', 'author-name',
+               item.is_anonymous ? 'Anonymous' : item.username),
+            timeEl(`${kind}-date`, item));
+        if (!(item.is_anonymous && viewerIsAdmin)) return [ header ];
+        const reveal = el('p', 'real-user', 'Posted anonymously by ');
+        reveal.append(el('strong', '', item.username), ' ',
+                      el('span', 'real-user-note', '· only admins see this'));
+        return [ header, reveal ];
     }
 
     function buildReply(reply) {
@@ -215,8 +272,10 @@ document.addEventListener('DOMContentLoaded', () => {
         deleteBtn.type = 'button';
         deleteBtn.dataset.replyId = reply.id;
         deleteBtn.setAttribute('aria-label', 'Delete reply');
-        replyEl.append(authorHeader('reply-header', 'reply-date', reply),
-                       el('div', 'reply-content', reply.content), deleteBtn);
+        const actions = el('div', 'reply-actions');
+        actions.append(deleteBtn);
+        replyEl.append(...authorHeader('reply', reply),
+                       el('div', 'reply-content', reply.content), actions);
         return replyEl;
     }
 
@@ -236,17 +295,19 @@ document.addEventListener('DOMContentLoaded', () => {
         replyBtn.type = 'button';
         replyBtn.dataset.commentId = comment.id;
         replyBtn.setAttribute('aria-label', 'Reply to comment');
-        actions.append(deleteBtn, replyBtn);
+        actions.append(replyBtn, deleteBtn);
 
         const container = el('div', 'reply-form-container');
-        container.style.display = 'none';
+        container.hidden = true;
         const form = el('form', 'reply-form');
         form.dataset.commentId = comment.id;
-        const textarea = el('textarea', 'reply-content');
+        const textarea = el('textarea', 'reply-input');
+        textarea.id = `reply-input-${comment.id}`;
         textarea.name = 'content';
-        textarea.placeholder = 'Write your reply...';
-        textarea.setAttribute('aria-label', 'Your reply');
+        textarea.placeholder = 'Write your reply…';
         textarea.required = true;
+        const textareaLabel = el('label', 'visually-hidden', 'Your reply');
+        textareaLabel.htmlFor = textarea.id;
         const hint = el('p', 'field-hint',
                         'Hidden from other readers. Admins can still see who wrote it.');
         hint.id = `reply-anonymous-hint-${comment.id}`;
@@ -262,14 +323,16 @@ document.addEventListener('DOMContentLoaded', () => {
         submitBtn.type = 'submit';
         const cancelBtn = el('button', 'btn btn-small btn-cancel-reply', 'Cancel');
         cancelBtn.type = 'button';
+        const buttons = el('div', 'form-buttons');
+        buttons.append(submitBtn, cancelBtn);
         const row = el('div', 'form-row');
-        row.append(anonField, submitBtn, cancelBtn);
+        row.append(anonField, buttons);
         const status = el('p', 'form-status');
         status.setAttribute('role', 'status');
-        form.append(textarea, row, status);
+        form.append(textareaLabel, textarea, row, status);
         container.append(form);
 
-        commentEl.append(authorHeader('comment-header', 'comment-date', comment),
+        commentEl.append(...authorHeader('comment', comment),
                          el('div', 'comment-content', comment.content), actions,
                          container);
         return commentEl;
@@ -278,24 +341,30 @@ document.addEventListener('DOMContentLoaded', () => {
     function openReplyForm(commentEl, focus) {
         const container = commentEl.querySelector('.reply-form-container');
         const replyBtn = commentEl.querySelector('.btn-reply');
-        container.style.display = 'block';
-        if (replyBtn) replyBtn.style.display = 'none';
-        if (focus) container.querySelector('.reply-content').focus();
+        container.hidden = false;
+        if (replyBtn) replyBtn.hidden = true;
+        if (focus) container.querySelector('.reply-input').focus();
     }
 
     function closeReplyForm(commentEl) {
         const container = commentEl.querySelector('.reply-form-container');
         const replyBtn = commentEl.querySelector('.btn-reply');
         const form = container.querySelector('.reply-form');
-        container.style.display = 'none';
-        form.querySelector('.reply-content').value = '';
+        container.hidden = true;
+        form.querySelector('.reply-input').value = '';
         form.querySelector('.reply-anonymous-checkbox').checked = false;
         clearStatus(form.querySelector('.form-status'));
         drafts.remove(replyDraftKey(commentEl.dataset.commentId));
         if (replyBtn) {
-            replyBtn.style.display = '';
+            replyBtn.hidden = false;
             replyBtn.focus();
         }
+    }
+
+    // Briefly tint a just-posted comment or reply so the eye finds it.
+    function markNew(itemEl) {
+        itemEl.classList.add('is-new');
+        window.setTimeout(() => itemEl.classList.remove('is-new'), 2400);
     }
 
     function setBusy(form, busy) {
@@ -314,7 +383,7 @@ document.addEventListener('DOMContentLoaded', () => {
     section.querySelectorAll('.reply-form').forEach(form => {
         const saved = drafts.get(replyDraftKey(form.dataset.commentId));
         if (saved) {
-            form.querySelector('.reply-content').value = saved;
+            form.querySelector('.reply-input').value = saved;
             openReplyForm(form.closest('.comment'), false);
         }
     });
@@ -322,7 +391,7 @@ document.addEventListener('DOMContentLoaded', () => {
     section.addEventListener('input', (e) => {
         if (e.target.id === 'comment-content') {
             drafts.set(commentDraftKey, e.target.value);
-        } else if (e.target.classList.contains('reply-content')) {
+        } else if (e.target.classList.contains('reply-input')) {
             const form = e.target.closest('.reply-form');
             drafts.set(replyDraftKey(form.dataset.commentId), e.target.value);
         }
@@ -357,13 +426,15 @@ document.addEventListener('DOMContentLoaded', () => {
         textarea.value = '';
         checkbox.checked = false;
         drafts.remove(commentDraftKey);
-        showStatus(status, 'Comment posted.', 'success');
+        markNew(commentEl);
+        showStatus(status, 'Comment posted. Thanks for joining in!', 'success',
+                   false, {paw : true});
     }
 
     async function submitReply(form) {
         const commentEl = form.closest('.comment');
         const commentId = form.dataset.commentId;
-        const textarea = form.querySelector('.reply-content');
+        const textarea = form.querySelector('.reply-input');
         const checkbox = form.querySelector('.reply-anonymous-checkbox');
         const status = form.querySelector('.form-status');
         clearStatus(status);
@@ -386,9 +457,12 @@ document.addEventListener('DOMContentLoaded', () => {
             repliesList = el('div', 'replies-list');
             commentEl.append(repliesList);
         }
-        repliesList.append(buildReply(result.data.reply));
+        const replyEl = buildReply(result.data.reply);
+        repliesList.append(replyEl);
         closeReplyForm(commentEl);
-        showStatus(sectionStatus, 'Reply posted.', 'success');
+        markNew(replyEl);
+        showStatus(sectionStatus, 'Reply posted. Thanks for joining in!',
+                   'success', false, {paw : true});
     }
 
     async function deleteItem(btn, kind) {

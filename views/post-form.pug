@@ -3,6 +3,8 @@ extends layout
 block content
     .form-container
         h1= isEdit ? 'Edit Question Box' : 'New Question Box'
+        if !isEdit
+            p.form-intro Give it a clear title, then write as much as you like. Your line breaks are kept, and readers can comment once it's published.
 
         - var draftKey = isEdit ? `draft:/post/${post.id}/edit` : 'draft:/post/new'
         form.post-form(action=isEdit ? `/post/${post.id}/edit` : '/post/new' method="POST" data-draft-key=draftKey)
