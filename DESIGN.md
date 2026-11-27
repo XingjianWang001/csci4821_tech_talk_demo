@@ -130,13 +130,13 @@ components:
 
 Every color in the app comes from a Shiba Inu. The page is the pale cream undercoat (urajiro), the header and footer bands are the sesame-light yellow, the ink is the black of a black-and-tan Shiba, and the single strong accent is the red coat. The owner chose this palette and asked for it to be kept and developed. It is the identity, not a placeholder to be replaced.
 
-The app is a working blog that people watch over a screen share, so color does structural work. Two surfaces, one strong accent and dark warm ink keep it legible through video compression and at thumbnail size. The red-tan marks what you can read next or act on: titles, the brand, primary buttons. Everything else stays quiet so the accent stays loud.
+The app is a working blog that people watch over a screen share, so color does structural work. Two surfaces, one strong accent and dark warm ink keep it legible through video compression and at thumbnail size. The red-tan marks what you act on: page headings, the brand, links, primary buttons, and a list title the moment you point at it. Everything else stays quiet so the accent stays loud.
 
 The type, layout and Shiba motif follow the same idea: warm and friendly at a glance, calm and legible while reading. Every value lives as a token on `:root` in `resources/css/main.css`.
 
 **Key Characteristics:**
 - Warm cream canvas with one paper-white content surface. No grey anywhere.
-- One strong red-tan accent for titles, the brand, links and the primary action.
+- One strong red-tan accent for page headings, the brand, links and the primary action.
 - Quiet sesame-yellow secondary for everyday actions (Edit, Reply, Cancel, pagination).
 - Red appears only on Delete.
 - Every text and control pair meets WCAG AA, most well above it.
@@ -146,7 +146,7 @@ The type, layout and Shiba motif follow the same idea: warm and friendly at a gl
 A warm, low-chroma family pulled from one dog's coat, with a single saturated red-tan doing all the pointing.
 
 ### Primary
-- **Shiba Red-Tan** (`shiba-red-tan`): the accent. Used for question box titles, page headings, the brand and the Shiba mark's coat, inline links, the 404 numeral, the outline of the admin's anonymous-author reveal, and the fill of the primary button. It reaches 6.0:1 on the paper surface, 5.9:1 on the cream page and 5.1:1 on the yellow band.
+- **Shiba Red-Tan** (`shiba-red-tan`): the accent. Used for page headings (including the question box title on its own page), list titles on hover and focus, the brand and the Shiba mark's coat, inline links, the 404 numeral, the outline of the admin's anonymous-author reveal, and the fill of the primary button. It reaches 6.0:1 on the paper surface, 5.9:1 on the cream page and 5.1:1 on the yellow band.
 - **Deep Red-Tan** (`shiba-red-tan-deep`): accent hover and the focus ring. 7.9:1 on paper.
 - **Tan on Black** (`shiba-tan-light`): the accent as it appears on the black coat. Used only on dark fills such as the admin badge (7.8:1 on Shiba Black).
 
@@ -219,9 +219,10 @@ Line heights: `--leading-tight` 1.15 (headings), `--leading-snug` 1.35 (buttons,
 
 ### Rules
 - Headings are display, weight 400, `text-wrap: balance`. Body text uses `text-wrap: pretty`.
-- Post bodies are capped at `--measure` (70ch) and keep `white-space: pre-wrap`.
+- Bodies, comments, list previews and intro lines are capped at `--measure` (56ch). `ch` is the width of a "0", wider than Atkinson's average letter, so 56ch holds about 73 characters. Post bodies keep `white-space: pre-wrap`.
 - Titles, bodies, comments and author names use `overflow-wrap: anywhere`, so one very long word wraps instead of overflowing.
-- Meta lines (author · date · comments) are `--text-sm` in Bark, separated by middle dots. They support the title and never compete with it.
+- Meta lines (author · date · comments) are `--text-sm` in Bark, separated by middle dots. They support the title and never compete with it. In the list, a non-zero comment count is bold Shiba Black ("No comments yet" stays muted), so rows with a conversation stand out.
+- **List hierarchy:** title in Young Serif `--text-lg`, Shiba Black, turning red-tan with an underline on hover or focus; then the meta line; then the preview at `--text-sm`. Every list title in red-tan made the list a monotone wall, so the accent is reserved for the page h1 and for the row under the pointer.
 - Dates use one format everywhere, with no seconds: `Nov 27, 2026, 3:04 PM` (`formatDate` in `server.js`, the same `Intl.DateTimeFormat` options in `main.js`). They render in `<time datetime>`.
 
 ## Layout
@@ -299,7 +300,7 @@ The Shiba is the identity anchor. It is an original geometric head (triangle ear
 
 ### Do:
 - **Do** use the semantic roles in `:root` for every color, and add a new role before adding a one-off value.
-- **Do** keep red-tan for things the reader reads next or acts on: titles, the brand, links and the one primary action.
+- **Do** keep red-tan for things the reader acts on: page headings, the brand, links, the one primary action, and the list row under the pointer. List titles at rest are ink.
 - **Do** check every new text pair against 4.5:1 (3:1 for large text and control outlines) on the surface it actually sits on, including the yellow band.
 - **Do** separate items inside the content surface with hairline dividers and space.
 - **Do** develop the Shiba identity (coat colors, Shiba motifs) rather than introducing an unrelated palette.

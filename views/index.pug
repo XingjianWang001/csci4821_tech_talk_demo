@@ -23,7 +23,7 @@ block content
                         p.post-meta
                             span.author by #{post.author_name}
                             time.date(datetime=isoDate(post.created_at))= formatDate(post.created_at)
-                            span.comment-count= commentCount === 1 ? '1 comment' : `${commentCount} comments`
+                            span.comment-count(class=commentCount > 0 ? 'has-comments' : undefined)= commentCount === 0 ? 'No comments yet' : commentCount === 1 ? '1 comment' : `${commentCount} comments`
                         p.post-preview= excerpt(post.content)
 
     if totalPages > 1

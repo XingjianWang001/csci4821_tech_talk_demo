@@ -72,7 +72,10 @@
   --weight-regular: 400;
   --weight-bold: 700;
 
-  --measure: 70ch; /* post body reading width */
+  /* Reading width for bodies, comments, previews and intro lines. `ch` is
+   * the width of a "0", wider than Atkinson's average letter, so 56ch
+   * holds about 73 characters: inside the 45-75 range. */
+  --measure: 56ch;
 
   /* ---- space and layout ---- */
   --space-1: 4px;
@@ -425,7 +428,7 @@ a:hover {
 .home-intro {
   margin-top: var(--space-2);
   color: var(--color-ink-muted);
-  max-width: 60ch;
+  max-width: var(--measure);
 }
 
 .post-list {
@@ -437,7 +440,10 @@ a:hover {
   border-top: 1px solid var(--color-border);
 }
 
-/* The whole item is one link: the title's ::after covers the card. */
+/* The whole item is one link: the title's ::after covers the card.
+ * Hierarchy: serif title in ink (red-tan only on hover/focus, so the accent
+ * keeps meaning "act here"), then a muted meta line where activity stands
+ * out, then a smaller preview. */
 .post-card {
   position: relative;
   padding-block: var(--space-4);
@@ -449,7 +455,7 @@ a:hover {
 }
 
 .post-title a {
-  color: var(--color-accent);
+  color: var(--color-ink);
   text-decoration: none;
 }
 
@@ -459,8 +465,9 @@ a:hover {
   inset: 0;
 }
 
-.post-card:hover .post-title a {
-  color: var(--color-accent-hover);
+.post-card:hover .post-title a,
+.post-title a:focus-visible {
+  color: var(--color-accent);
   text-decoration: underline;
   text-decoration-thickness: 1px;
 }
@@ -488,9 +495,16 @@ a:hover {
   margin-right: var(--space-3);
 }
 
+/* Question boxes with a conversation stand out from quiet ones. */
+.comment-count.has-comments {
+  color: var(--color-ink);
+  font-weight: var(--weight-bold);
+}
+
 .post-preview {
   margin-top: var(--space-2);
   max-width: var(--measure);
+  font-size: var(--text-sm);
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
@@ -787,7 +801,7 @@ a:hover {
 .form-intro {
   margin-top: var(--space-2);
   color: var(--color-ink-muted);
-  max-width: 60ch;
+  max-width: var(--measure);
 }
 
 .auth-form,
