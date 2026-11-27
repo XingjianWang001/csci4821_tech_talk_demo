@@ -1,3 +1,52 @@
+/* Shiba color system
+ * Primitives are named after the Shiba Inu coat; rules only use the
+ * semantic roles below. Change the palette here, nowhere else.
+ */
+:root {
+  /* primitives */
+  --shiba-cream: #fffdea;     /* urajiro, the pale undercoat */
+  --shiba-paper: #fffefa;     /* the one content surface */
+  --shiba-yellow: #f5eeae;    /* sesame-light fur, the chrome band */
+  --shiba-yellow-deep: #ece2a0;
+  --shiba-red-tan: #a3461a;   /* the red coat, the one strong accent */
+  --shiba-red-tan-deep: #8a3712;
+  --shiba-tan-light: #eba873; /* red-tan as it reads on the black coat */
+  --shiba-black: #2b2118;     /* black-and-tan ink */
+  --shiba-bark: #6b5a45;      /* muted ink */
+  --shiba-whisker: #8c7a5e;   /* control outlines */
+  --shiba-hairline: #ebe1bd;  /* dividers */
+  --warn-red: #b3261e;
+  --warn-red-deep: #8c1d17;
+  --leaf-green: #2f5d1e;
+  --leaf-wash: #eef2d8;
+  --warn-wash: #fbe6dd;
+  --sun-wash: #fbf3cc;
+
+  /* semantic roles */
+  --color-page: var(--shiba-cream);
+  --color-surface: var(--shiba-paper);
+  --color-band: var(--shiba-yellow);
+  --color-ink: var(--shiba-black);
+  --color-ink-muted: var(--shiba-bark);
+  --color-accent: var(--shiba-red-tan);
+  --color-accent-hover: var(--shiba-red-tan-deep);
+  --color-accent-on-dark: var(--shiba-tan-light);
+  --color-on-accent: var(--shiba-cream);
+  --color-secondary: var(--shiba-yellow);
+  --color-secondary-hover: var(--shiba-yellow-deep);
+  --color-border: var(--shiba-hairline);
+  --color-border-strong: var(--shiba-whisker);
+  --color-destructive: var(--warn-red);
+  --color-destructive-hover: var(--warn-red-deep);
+  --color-on-destructive: var(--shiba-paper);
+  --color-success: var(--leaf-green);
+  --color-success-bg: var(--leaf-wash);
+  --color-error-bg: var(--warn-wash);
+  --color-info-bg: var(--sun-wash);
+  --color-focus: var(--shiba-red-tan-deep);
+  --color-scrim: rgb(43 33 24 / 0.45); /* Shiba Black behind a dialog */
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -6,9 +55,25 @@
 
 body {
   font-family: Arial, sans-serif;
-  background-color: #fffdea;
-  color: #333;
+  background-color: var(--color-page);
+  color: var(--color-ink);
   line-height: 1.6;
+  caret-color: var(--color-accent);
+  accent-color: var(--color-accent);
+}
+
+::selection {
+  background-color: var(--color-band);
+  color: var(--color-ink);
+}
+
+a {
+  text-underline-offset: 0.2em;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
 }
 
 /* message stuff */
@@ -22,20 +87,26 @@ body {
 }
 
 .message.success {
-  background-color: #d4edda;
-  color: #155724;
-  border: 1px solid #c3e6cb;
+  background-color: var(--color-success-bg);
+  color: var(--color-success);
+  border: 1px solid var(--color-success);
 }
 
 .message.error {
-  background-color: #f8d7da;
-  color: #721c24;
-  border: 1px solid #f5c6cb;
+  background-color: var(--color-error-bg);
+  color: var(--color-destructive-hover);
+  border: 1px solid var(--color-destructive);
+}
+
+.message.info {
+  background-color: var(--color-info-bg);
+  color: var(--color-ink);
+  border: 1px solid var(--color-border-strong);
 }
 
 /* navbar */
 .navbar {
-  background-color: #f5eeae;
+  background-color: var(--color-band);
   padding: 15px 20px;
   display: flex;
   justify-content: space-between;
@@ -51,12 +122,12 @@ body {
 .nav-brand {
   font-size: 1.5em;
   font-weight: bold;
-  color: darkgoldenrod;
+  color: var(--color-accent);
   text-decoration: none;
 }
 
 .nav-brand:hover {
-  color: darkorange;
+  color: var(--color-accent-hover);
 }
 
 .welcome {
@@ -64,8 +135,8 @@ body {
 }
 
 .admin-badge {
-  background-color: darkorange;
-  color: white;
+  background-color: var(--color-ink);
+  color: var(--color-accent-on-dark);
   padding: 3px 8px;
   border-radius: 3px;
   font-size: 0.85em;
@@ -73,7 +144,7 @@ body {
 }
 
 .nav-link {
-  color: #333;
+  color: var(--color-ink);
   text-decoration: none;
   padding: 8px 15px;
   border-radius: 5px;
@@ -82,7 +153,7 @@ body {
 }
 
 .nav-link:hover {
-  background-color: #e5deae;
+  background-color: var(--color-secondary-hover);
 }
 
 /* main layout */
@@ -96,15 +167,13 @@ body {
 }
 
 .sidebar {
-  background-color: #eae9e1;
   padding: 20px;
-  border-radius: 10px;
   height: fit-content;
 }
 
 .sidebar h3 {
   margin-bottom: 15px;
-  color: darkgoldenrod;
+  color: var(--color-accent);
 }
 
 .nav-menu {
@@ -116,7 +185,7 @@ body {
 }
 
 .nav-menu a {
-  color: #333;
+  color: var(--color-ink);
   text-decoration: none;
   display: block;
   padding: 8px 10px;
@@ -124,11 +193,12 @@ body {
 }
 
 .nav-menu a:hover {
-  background-color: #f5eeae;
+  background-color: var(--color-secondary);
 }
 
 .content {
-  background-color: white;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
   padding: 30px;
   border-radius: 10px;
 }
@@ -140,11 +210,13 @@ body {
   gap: 20px;
 }
 
-.post-card {
-  background-color: #f0f0f0;
-  border: 1px solid #e5deae;
-  border-radius: 10px;
-  padding: 20px;
+.posts-grid {
+  margin-top: 20px;
+}
+
+.post-card + .post-card {
+  padding-top: 20px;
+  border-top: 1px solid var(--color-border);
 }
 
 .post-title {
@@ -152,19 +224,20 @@ body {
 }
 
 .post-title a {
-  color: darkgoldenrod;
+  color: var(--color-accent);
   text-decoration: none;
 }
 
 .post-title a:hover {
-  color: darkorange;
+  color: var(--color-accent-hover);
+  text-decoration: underline;
 }
 
 .post-meta {
   display: flex;
   gap: 15px;
   font-size: 0.9em;
-  color: #666;
+  color: var(--color-ink-muted);
   margin-bottom: 15px;
 }
 
@@ -174,13 +247,14 @@ body {
 }
 
 .read-more {
-  color: darkgoldenrod;
+  color: var(--color-accent);
   text-decoration: none;
   font-weight: bold;
 }
 
 .read-more:hover {
-  color: darkorange;
+  color: var(--color-accent-hover);
+  text-decoration: underline;
 }
 
 /* pagination */
@@ -193,19 +267,20 @@ body {
 }
 
 .page-btn {
-  background-color: #f5eeae;
-  color: #333;
+  background-color: var(--color-secondary);
+  color: var(--color-ink);
+  border: 1px solid var(--color-border-strong);
   padding: 8px 15px;
   border-radius: 5px;
   text-decoration: none;
 }
 
 .page-btn:hover {
-  background-color: #e5deae;
+  background-color: var(--color-secondary-hover);
 }
 
 .page-info {
-  color: #666;
+  color: var(--color-ink-muted);
 }
 
 /* post detail page */
@@ -215,10 +290,12 @@ body {
 
 .post-header {
   margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .post-header h1 {
-  color: darkgoldenrod;
+  color: var(--color-accent);
   margin-bottom: 10px;
 }
 
@@ -236,26 +313,21 @@ body {
   white-space: pre-wrap;
   line-height: 1.8;
   font-size: 1.05em;
-  padding: 20px;
-  background-color: #f9f9f9;
-  border-radius: 5px;
-  border-left: 4px solid #f5eeae;
 }
 
 /* comments section */
 .comments-section {
   margin-top: 40px;
+  padding-top: 30px;
+  border-top: 1px solid var(--color-border);
 }
 
 .comments-section h2 {
-  color: darkgoldenrod;
+  color: var(--color-accent);
   margin-bottom: 20px;
 }
 
 .comment-form {
-  background-color: #f9f9f9;
-  padding: 20px;
-  border-radius: 10px;
   margin-bottom: 30px;
 }
 
@@ -266,7 +338,9 @@ body {
 #comment-content {
   width: 100%;
   padding: 10px;
-  border: 1px solid #ccc;
+  color: var(--color-ink);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
   border-radius: 5px;
   font-family: Arial, sans-serif;
   font-size: 1em;
@@ -282,15 +356,11 @@ body {
 }
 
 .login-prompt {
-  background-color: #fff3cd;
-  padding: 15px;
-  border-radius: 5px;
   margin-bottom: 30px;
-  text-align: center;
 }
 
 .login-prompt a {
-  color: darkgoldenrod;
+  color: var(--color-accent);
   font-weight: bold;
 }
 
@@ -301,10 +371,8 @@ body {
 }
 
 .comment {
-  background-color: #f0f0f0;
-  padding: 15px;
-  border-radius: 8px;
-  border-left: 3px solid #f5eeae;
+  padding: 15px 0 0;
+  border-top: 1px solid var(--color-border);
 }
 
 .comment-header {
@@ -316,12 +384,12 @@ body {
 }
 
 .real-user {
-  color: darkorange;
+  color: var(--color-accent);
   font-size: 0.85em;
 }
 
 .comment-date {
-  color: #999;
+  color: var(--color-ink-muted);
 }
 
 .comment-content {
@@ -336,28 +404,19 @@ body {
   margin-bottom: 10px;
 }
 
-.btn-reply {
-  background-color: #007bff;
-  color: white;
-}
-
-.btn-reply:hover {
-  background-color: #0056b3;
-}
-
 /* reply form stuff */
 .reply-form-container {
   margin-top: 10px;
-  padding: 15px;
-  background-color: #fff;
-  border-radius: 5px;
-  border: 1px solid #ddd;
+  padding: 15px 0;
+  border-top: 1px dashed var(--color-border);
 }
 
 .reply-form .reply-content {
   width: 100%;
   padding: 8px;
-  border: 1px solid #ccc;
+  color: var(--color-ink);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
   border-radius: 5px;
   font-family: Arial, sans-serif;
   font-size: 0.95em;
@@ -366,29 +425,17 @@ body {
   margin-bottom: 10px;
 }
 
-.btn-cancel-reply {
-  background-color: #6c757d;
-  color: white;
-}
-
-.btn-cancel-reply:hover {
-  background-color: #5a6268;
-}
-
 .replies-list {
   margin-top: 15px;
   padding-left: 20px;
-  border-left: 2px solid #e5deae;
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
 .reply {
-  background-color: #fafafa;
-  padding: 12px;
-  border-radius: 5px;
-  border: 1px solid #e5e5e5;
+  padding: 12px 0 0;
+  border-top: 1px dashed var(--color-border);
 }
 
 .reply-header {
@@ -400,7 +447,7 @@ body {
 }
 
 .reply-date {
-  color: #999;
+  color: var(--color-ink-muted);
 }
 
 .reply-content {
@@ -410,18 +457,9 @@ body {
   margin-bottom: 8px;
 }
 
-.btn-delete-reply {
-  background-color: #dc3545;
-  color: white;
-}
-
-.btn-delete-reply:hover {
-  background-color: #c82333;
-}
-
 .no-comments {
   text-align: center;
-  color: #999;
+  color: var(--color-ink-muted);
   padding: 20px;
 }
 
@@ -429,9 +467,7 @@ body {
 .auth-container, .form-container, .error-container {
   max-width: 500px;
   margin: 50px auto;
-  background-color: #f9f9f9;
   padding: 30px;
-  border-radius: 10px;
 }
 
 .error-container {
@@ -440,7 +476,7 @@ body {
 
 .error-container h1 {
   font-size: 4em;
-  color: darkorange;
+  color: var(--color-accent);
 }
 
 .auth-form, .post-form {
@@ -455,21 +491,25 @@ body {
   display: block;
   margin-bottom: 5px;
   font-weight: bold;
-  color: #555;
+  color: var(--color-ink);
 }
 
 .form-group input, .form-group textarea {
   width: 100%;
   padding: 10px;
-  border: 1px solid #ccc;
+  color: var(--color-ink);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
   border-radius: 5px;
   font-family: Arial, sans-serif;
   font-size: 1em;
 }
 
-.form-group input:focus, .form-group textarea:focus {
-  outline: none;
-  border-color: darkgoldenrod;
+.form-group input:focus, .form-group textarea:focus,
+#comment-content:focus, .reply-form .reply-content:focus {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 0;
+  border-color: var(--color-accent);
 }
 
 .form-actions {
@@ -483,55 +523,54 @@ body {
 }
 
 .auth-footer a {
-  color: darkgoldenrod;
+  color: var(--color-accent);
   font-weight: bold;
 }
 
-/* buttons */
+/* buttons
+ * primary: filled red-tan, one per view.
+ * secondary (Edit, Reply, Cancel): quiet yellow, the default .btn look.
+ * destructive (Delete): red outline, fills red on hover. Delete only.
+ */
 .btn {
   padding: 10px 20px;
-  border: none;
+  border: 1px solid var(--color-border-strong);
   border-radius: 5px;
   cursor: pointer;
   text-decoration: none;
   display: inline-block;
   font-size: 1em;
+  font-family: inherit;
+  line-height: 1.4;
+  background-color: var(--color-secondary);
+  color: var(--color-ink);
+}
+
+.btn:hover {
+  background-color: var(--color-secondary-hover);
 }
 
 .btn-primary {
-  background-color: darkgoldenrod;
-  color: white;
+  background-color: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-on-accent);
 }
 
 .btn-primary:hover {
-  background-color: darkorange;
+  background-color: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
 }
 
-.btn-secondary {
-  background-color: #ccc;
-  color: #333;
+.btn-delete, .btn-delete-comment, .btn-delete-reply {
+  background-color: var(--color-surface);
+  border-color: var(--color-destructive);
+  color: var(--color-destructive);
 }
 
-.btn-secondary:hover {
-  background-color: #bbb;
-}
-
-.btn-edit {
-  background-color: #007bff;
-  color: white;
-}
-
-.btn-edit:hover {
-  background-color: #0056b3;
-}
-
-.btn-delete {
-  background-color: #dc3545;
-  color: white;
-}
-
-.btn-delete:hover {
-  background-color: #c82333;
+.btn-delete:hover, .btn-delete-comment:hover, .btn-delete-reply:hover {
+  background-color: var(--color-destructive);
+  border-color: var(--color-destructive);
+  color: var(--color-on-destructive);
 }
 
 .btn-small {
@@ -539,21 +578,12 @@ body {
   font-size: 0.85em;
 }
 
-.btn-delete-comment {
-  background-color: #dc3545;
-  color: white;
-}
-
-.btn-delete-comment:hover {
-  background-color: #c82333;
-}
-
 .footer {
-  background-color: #f5eeae;
+  background-color: var(--color-band);
   padding: 20px;
   text-align: center;
   margin-top: 40px;
-  color: #666;
+  color: var(--color-ink-muted);
 }
 
 .footer p {
@@ -571,11 +601,11 @@ body {
 }
 
 .form-status[data-type="success"] {
-  color: #155724;
+  color: var(--color-success);
 }
 
 .form-status[data-type="error"] {
-  color: #721c24;
+  color: var(--color-destructive-hover);
 }
 
 .form-status a {
@@ -587,24 +617,23 @@ body {
 }
 
 #comments-heading:focus-visible {
-  outline: 2px solid darkgoldenrod;
-  outline-offset: 4px;
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
 }
 
-/* confirmation dialog for deletes */
+/* confirmation dialog for deletes: a paper surface over a dimmed page */
 #confirm-dialog {
   margin: auto;
   max-width: min(420px, calc(100vw - 32px));
   padding: 24px;
-  border: 1px solid #e0d48a;
-  border-radius: 8px;
-  background-color: #fffdea;
-  color: #333;
-  box-shadow: 0 8px 24px rgba(80, 60, 0, 0.25);
+  border: 1px solid var(--color-border-strong);
+  border-radius: 10px;
+  background-color: var(--color-surface);
+  color: var(--color-ink);
 }
 
 #confirm-dialog::backdrop {
-  background-color: rgba(51, 40, 0, 0.45);
+  background-color: var(--color-scrim);
 }
 
 #confirm-dialog p {
@@ -615,11 +644,12 @@ body {
 #confirm-dialog .form-row {
   gap: 10px;
   justify-content: flex-end;
+}
 
 /* helper text: definitions, anonymity and reply rules */
 .home-intro {
   margin: -4px 0 20px;
-  color: #555;
+  color: var(--color-ink-muted);
 }
 
 .no-posts {
@@ -637,7 +667,7 @@ body {
 .field-hint,
 .reply-rule {
   margin: 2px 0 0;
-  color: #666;
+  color: var(--color-ink-muted);
   font-size: 0.85em;
 }
 

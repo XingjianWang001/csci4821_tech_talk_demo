@@ -258,7 +258,7 @@ document.addEventListener('DOMContentLoaded', () => {
         label.append(checkbox, ' Reply anonymously');
         const anonField = el('div', 'anon-field');
         anonField.append(label, hint);
-        const submitBtn = el('button', 'btn btn-small', 'Add Reply');
+        const submitBtn = el('button', 'btn btn-small btn-primary', 'Add Reply');
         submitBtn.type = 'submit';
         const cancelBtn = el('button', 'btn btn-small btn-cancel-reply', 'Cancel');
         cancelBtn.type = 'button';
