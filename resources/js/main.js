@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.message-dismiss').forEach(btn => {
         btn.addEventListener('click', () => {
             btn.closest('.message').remove();
-            const pageHeading = document.querySelector('main h1');
+            const pageHeading = document.querySelector('h1');
             if (pageHeading) {
                 pageHeading.setAttribute('tabindex', '-1');
                 pageHeading.focus();
@@ -231,6 +231,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const commentsList = section.querySelector('.comments-list');
     const heading = document.getElementById('comments-heading');
     const countEl = document.getElementById('comment-count');
+    const countLabelEl = document.getElementById('comment-count-label');
     const viewerIsAdmin = section.dataset.viewerAdmin === 'true';
     const draftPrefix = `draft:${window.location.pathname}`;
     const commentDraftKey = `${draftPrefix}:comment`;
@@ -266,6 +267,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!countEl) return;
         const next = Math.max(0, (parseInt(countEl.textContent, 10) || 0) + delta);
         countEl.textContent = String(next);
+        if (countLabelEl) {
+            countLabelEl.textContent = next === 1 ? 'comment' : 'comments';
+        }
     }
 
     function el(tag, className, text) {
@@ -586,7 +590,8 @@ document.addEventListener('DOMContentLoaded', () => {
         window.clearTimeout(commentEl.removalTimer);
         commentEl.remove();
         if (!commentsList.querySelector('.comment, .no-comments')) {
-            commentsList.append(el('p', 'no-comments', 'No comments yet.'));
+            const template = document.getElementById('no-comments-template');
+            if (template) commentsList.append(template.content.cloneNode(true));
         }
     }
 

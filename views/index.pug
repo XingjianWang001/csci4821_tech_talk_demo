@@ -1,8 +1,16 @@
 extends layout
 
+block hero
+    //- The home page's one bold moment: the header band carries on into a
+    //- hero with the Shiba mark at full size. Chrome, not a box in the surface.
+    section.home-hero(aria-labelledby="home-title")
+        .home-hero-inner
+            +shibaMark({size: 120, className: 'home-hero-mark'})
+            .home-hero-text
+                h1#home-title Question Boxes
+                p.home-hero-lede Blog posts that start a conversation. Someone writes one, and readers answer in the comments.
+
 block content
-    h1 Recent Question Boxes
-    p.home-intro A question box is a blog post: someone writes it, readers respond in the comments, and the shiba keeps watch.
 
     if posts.length === 0
         .empty-state

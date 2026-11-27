@@ -263,7 +263,8 @@ Three roles that are distinct in fill as well as hue, so they can't be confused 
 ### Cards / Containers
 - **Content surface:** Paper, with a 1px hairline border, 10px corners and 30px padding. It is the only container.
 - **Question boxes in the list:** not cards. Each is an `article` row divided by hairlines; the title link's `::after` covers the whole row, so the row is one link target. Keyboard focus outlines the whole row. The preview is cut on a word boundary (200-character budget) and clamped to three lines.
-- **Comment thread order:** the "Comments (N)" heading (with a "Write a comment" jump link when there are comments), then the comments, then the "Leave a Comment" form, or the guest's log-in prompt, closing the thread after a hairline and `--space-6`. Reading comes before writing; a new comment lands just above the form.
+- **Comment count:** the thread's heading leads with the count as a red-tan Young Serif numeral at `--text-xl`, then "comment"/"comments" at `--text-lg` (`main.js` keeps both in sync).
+- **Comment thread order:** the count heading (with a "Write a comment" jump link when there are comments), then the comments, then the "Leave a Comment" form, or the guest's log-in prompt, closing the thread after a hairline and `--space-6`. Reading comes before writing; a new comment lands just above the form.
 - **Comments and replies:** rows divided by hairlines. Replies are indented 24px under their comment with dashed dividers. A just-posted comment or reply gets a short Sun Wash tint.
 
 ### Inputs / Fields
@@ -287,14 +288,16 @@ The Shiba is the identity anchor. It is an original geometric head (triangle ear
 
 **Where it may appear (and nowhere else):**
 - **Brand mark** in the header, 36px, `mood: 'happy'`. Its head tilts a few degrees on hover.
+- **Home hero**, 64–120px (fluid), `mood: 'happy'`, beside the "Question Boxes" h1 and a one-line lede on a continuation of the sesame header band (`block hero` in `layout.pug`). It is the list page's one bold moment and replaces the old definition sentence. The band is chrome, not a box inside the content surface.
 - **Favicon.**
 - **404**, 120px, `mood: 'lost'` (round eyes and a "?"), with one slow head tilt on load.
 - **Empty question box list**, 96px, `mood: 'sleepy'` (closed eyes and a "z"), with a way forward under it.
+- **Empty comment thread**, 56px, `mood: 'sleepy'`, left-aligned beside "No comments yet. Start the conversation." (the `noComments` mixin, also cloned by `main.js` from a `<template>` when the last comment is deleted).
 - **Paw** on the admin badge and in the "Comment posted. Thanks for joining in!" / "Reply posted. Thanks for joining in!" acknowledgements, which are announced through the existing `role="status"` regions.
 
 **Rules:**
 - Decorative art is `aria-hidden`; meaningful text sits next to it.
-- Art never pushes content below the fold on the list or question box pages. No mark inside list rows, comments or forms.
+- Art never pushes content below the fold on the list or question box pages: with the hero, the first question box still starts in the first viewport at 390×844. No mark inside list rows, comments or forms.
 - Motion uses transforms and opacity only, 160–600ms (`--duration-quick`, `--duration-gentle`, `--duration-tap`), one shot (no loops), and lives inside `@media (prefers-reduced-motion: no-preference)`. With reduced motion the new-item tint stays but nothing moves.
 - No named mascot, no speech bubbles, no confetti, no sound. Don't copy an existing mascot or logo.
 
