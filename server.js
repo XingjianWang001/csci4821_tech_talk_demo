@@ -147,6 +147,25 @@ function denyPermission(req, res, message, postId) {
     res.redirect(`/post/${postId}`);
 }
 
+// What the user typed, or '' when it's missing or only whitespace. Content
+// is kept exactly as typed (line breaks matter); only the check trims.
+function filledText(value) {
+    return typeof value === 'string' && value.trim() !== '' ? value : '';
+}
+
+// Question box form: a trimmed title and non-blank content, with a message
+// per field for the form to show next to it.
+function checkQuestionBox(body) {
+    const title = typeof body.title === 'string' ? body.title.trim() : '';
+    const content = filledText(body.content);
+    const errors = {};
+    if (!title) errors.title = "Add a title. Spaces alone don't count.";
+    if (!content) {
+        errors.content = "Write some content. Spaces and blank lines alone don't count.";
+    }
+    return {title, content, errors, ok : !errors.title && !errors.content};
+}
+
 app.get('/', async (req, res) => {
     const limit = 10;
     const totalCount = await data.getTotalPostsCount();
@@ -274,11 +293,16 @@ app.get('/post/new', requireLogin, (req, res) => {
 });
 
 app.post('/post/new', requireLogin, async (req, res) => {
-    const {title, content} = req.body;
-    if (!title || !content) {
-        req.session.message = 'Add a title and content before publishing.';
-        req.session.messageType = 'error';
-        return res.redirect('/post/new');
+    const {title, content, errors, ok} = checkQuestionBox(req.body);
+    if (!ok) {
+        // Re-show the form with what was typed and an error at each field.
+        return res.status(400).render('post-form', {
+            title : 'New Question Box',
+            post : null,
+            isEdit : false,
+            values : req.body,
+            errors
+        });
     }
     try {
         const user = await data.getUserByUsername(req.session.user.username);
@@ -337,12 +361,15 @@ app.post('/post/:id/edit', requireLogin, async (req, res) => {
                               'Only the author or an admin can edit this question box.',
                               req.params.id);
     }
-    const {title, content} = req.body;
-    if (!title || !content) {
-        req.session.message =
-            'A question box needs a title and content. Fill in both to save.';
-        req.session.messageType = 'error';
-        return res.redirect(`/post/${req.params.id}/edit`);
+    const {title, content, errors, ok} = checkQuestionBox(req.body);
+    if (!ok) {
+        return res.status(400).render('post-form', {
+            title : 'Edit Question Box',
+            post : {id : req.params.id},
+            isEdit : true,
+            values : req.body,
+            errors
+        });
     }
     await data.updatePost(req.params.id, title, content);
     req.session.message = 'Question box updated.';
@@ -361,15 +388,18 @@ app.post('/post/:id/delete', requireLogin, async (req, res) => {
                               'Only the author or an admin can delete this question box.',
                               req.params.id);
     }
+    const commentCount = (await data.getCommentsByPostId(req.params.id)).length;
     await data.deletePost(req.params.id);
-    req.session.message = 'Question box deleted, along with its comments and replies.';
+    req.session.message = commentCount === 0
+        ? 'Question box deleted.'
+        : 'Question box deleted, along with its comments and replies.';
     req.session.messageType = 'success';
     res.redirect('/');
 });
 
 app.post('/api/comment', requireApiLogin, async (req, res) => {
     const {post_id, content, is_anonymous} = req.body;
-    if (!post_id || !content) {
+    if (!post_id || !filledText(content)) {
         return res.status(400).json({error : 'Write something before adding your comment.'});
     }
     try {
@@ -418,7 +448,7 @@ app.delete('/api/comment/:id', requireApiLogin, async (req, res) => {
 
 app.post('/api/reply', requireApiLogin, async (req, res) => {
     const {comment_id, content, is_anonymous} = req.body;
-    if (!comment_id || !content) {
+    if (!comment_id || !filledText(content)) {
         return res.status(400).json({error : 'Write something before adding your reply.'});
     }
     try {

@@ -279,6 +279,9 @@ Three roles that are distinct in fill as well as hue, so they can't be confused 
 - **Band:** a full-width sesame-yellow bar. The brand is the Shiba mark plus "Question Box Blog" in Young Serif red-tan. Nav links are Shiba Black and take a Deep Sesame fill on hover; the current page is underlined in red-tan.
 - **Admin badge:** a Shiba Black pill with a Tan on Black paw and the label "Admin". It is the one dark element on the page, so admin mode is unmistakable.
 
+### Field errors
+Required text fields reject input that is only spaces or blank lines, in the browser ("Spaces alone don't count. Write something here.") and on the server. When the question box form comes back from the server, it keeps what was typed and puts the message directly under the field in bold Deep Warning Red, with a Warning Red field border, `aria-invalid` and focus on the first problem field.
+
 ### Admin reveal
 On an anonymous comment or reply, admins see a small pill in the author line: a paw and "Posted anonymously by **name**", in the Admin badge's Shiba Black and Tan on Black, so it reads as admin-only at a glance ("only admins see this" is in the accessible name).
 

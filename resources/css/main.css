@@ -1094,6 +1094,19 @@ main:focus {
   font-size: var(--text-xs);
 }
 
+/* A field the server sent back: the message sits right under it. */
+.field-error {
+  margin-top: var(--space-1);
+  color: var(--color-destructive-hover);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+}
+
+.form-group.has-error input,
+.form-group.has-error textarea {
+  border-color: var(--color-destructive);
+}
+
 .auth-footer {
   margin-top: var(--space-5);
   padding-top: var(--space-4);

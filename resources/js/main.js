@@ -32,6 +32,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // Required text fields reject spaces-only input before anything is sent;
+    // the server checks the same rule.
+    document.addEventListener('input', (e) => {
+        const field = e.target;
+        if (!field.matches('input[required][type="text"], textarea[required]')) {
+            return;
+        }
+        field.setCustomValidity(
+            field.value !== '' && field.value.trim() === ''
+                ? "Spaces alone don't count. Write something here."
+                : '');
+    });
+
     // The server names a draft to drop after it saved that form for real.
     if (document.body.dataset.clearDraft) {
         drafts.remove(document.body.dataset.clearDraft);
