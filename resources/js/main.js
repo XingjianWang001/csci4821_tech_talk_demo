@@ -300,7 +300,7 @@ document.addEventListener('DOMContentLoaded', () => {
         label.appendChild(anonymousCheckbox);
         label.appendChild(document.createTextNode(' Reply anonymously'));
         const submitBtn = document.createElement('button');
-        submitBtn.className = 'btn btn-small';
+        submitBtn.className = 'btn btn-small btn-primary';
         submitBtn.type = 'submit';
         submitBtn.textContent = 'Submit Reply';
         const cancelBtn = document.createElement('button');
