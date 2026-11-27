@@ -5,7 +5,7 @@ html(lang="en")
         meta(name="viewport" content="width=device-width, initial-scale=1.0")
         title= title
         link(rel="stylesheet" href="/css/main.css")
-    body
+    body(data-clear-draft=clearDraft)
         if message
             .message(class=messageType)= message
 
@@ -20,8 +20,8 @@ html(lang="en")
                     a.nav-link(href="/post/new") New Post
                     a.nav-link(href="/logout") Logout
                 else
-                    a.nav-link(href="/login") Login
-                    a.nav-link(href="/register") Register
+                    a.nav-link(href=loginHref) Login
+                    a.nav-link(href=registerHref) Register
 
         .container
             aside.sidebar
@@ -39,4 +39,5 @@ html(lang="en")
             p &copy; 2025 Q&amp;A Box Blog | CSCI4131 Final Project
             p Made with love by Shiba
 
+        script(src="/js/main.js")
         block scripts

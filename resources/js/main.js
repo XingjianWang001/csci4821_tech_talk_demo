@@ -1,361 +1,444 @@
+// Client behavior for the Q&A Box Blog.
+// Rule: user content only ever reaches the page through textContent, never
+// through innerHTML or insertAdjacentHTML, so typed HTML shows up as text.
 document.addEventListener('DOMContentLoaded', () => {
-    const commentForm = document.getElementById('comment-form');
-    const deleteCommentButtons =
-        document.querySelectorAll('.btn-delete-comment');
-    const replyButtons = document.querySelectorAll('.btn-reply');
-    const deleteReplyButtons = document.querySelectorAll('.btn-delete-reply');
-    if (commentForm) {
-        commentForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const content = document.getElementById('comment-content').value;
-            const isAnonymous =
-                document.getElementById('anonymous-checkbox').checked;
-            const postId = window.location.pathname.split('/')[2];
+    // sessionStorage can be missing or throw (private mode, blocked storage).
+    // Drafts are a convenience, so every access fails quietly.
+    const drafts = {
+        get(key) {
             try {
-                const response = await fetch('/api/comment', {
-                    method : 'POST',
-                    headers : {'Content-Type' : 'application/json'},
-                    body : JSON.stringify({
-                        post_id : postId,
-                        content : content,
-                        is_anonymous : isAnonymous
-                    })
-                });
-                if (response.ok) {
-                    const data = await response.json();
-                    addCommentToDOM(data.comment);
-                    document.getElementById('comment-content').value = '';
-                    document.getElementById('anonymous-checkbox').checked =
-                        false;
-                } else {
-                    const error = await response.json();
-                    alert('Error: ' +
-                          (error.error || 'Failed to post comment'));
-                }
-            } catch (error) {
-                console.error('Error: ', error);
-                alert('Failed to post comment. Please try again.');
+                return window.sessionStorage.getItem(key);
+            } catch {
+                return null;
             }
+        },
+        set(key, value) {
+            try {
+                if (value) {
+                    window.sessionStorage.setItem(key, value);
+                } else {
+                    window.sessionStorage.removeItem(key);
+                }
+            } catch {
+                // ignore
+            }
+        },
+        remove(key) {
+            try {
+                window.sessionStorage.removeItem(key);
+            } catch {
+                // ignore
+            }
+        }
+    };
+
+    // The server names a draft to drop after it saved that form for real.
+    if (document.body.dataset.clearDraft) {
+        drafts.remove(document.body.dataset.clearDraft);
+    }
+
+    const prefersReducedMotion =
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // Accessible replacement for confirm(). Falls back to confirm() only in
+    // browsers without <dialog>.
+    function confirmAction(message) {
+        const dialog = document.getElementById('confirm-dialog');
+        if (!dialog || typeof dialog.showModal !== 'function') {
+            return Promise.resolve(window.confirm(message));
+        }
+        dialog.querySelector('#confirm-dialog-message').textContent = message;
+        dialog.returnValue = '';
+        dialog.showModal();
+        return new Promise(resolve => {
+            // The form's submit names the button right away; close covers
+            // Escape. Whichever comes first answers.
+            const listeners = new AbortController();
+            const answer = (confirmed) => {
+                listeners.abort();
+                resolve(confirmed);
+            };
+            dialog.querySelector('form').addEventListener(
+                'submit',
+                (e) => answer(Boolean(e.submitter) &&
+                              e.submitter.value === 'confirm'),
+                {signal : listeners.signal});
+            dialog.addEventListener(
+                'close', () => answer(dialog.returnValue === 'confirm'),
+                {signal : listeners.signal});
         });
     }
 
-    deleteCommentButtons.forEach(btn => {
-        btn.addEventListener('click', async () => {
-            if (!confirm('Are you sure you want to delete this comment?')) {
-                return;
-            }
-            const commentId = btn.getAttribute('data-comment-id');
-            try {
-                const response = await fetch(`/api/comment/${commentId}`,
-                                             {method : 'DELETE'});
-                if (response.ok) {
-                    const commentElement = btn.closest('.comment');
-                    commentElement.remove();
-                } else {
-                    const error = await response.json();
-                    alert('Error: ' +
-                          (error.error || 'Failed to delete comment'));
+    // fetch() wrapper that always resolves to {ok, data} or {ok, error}.
+    async function send(url, options) {
+        let response;
+        try {
+            response = await fetch(url, {
+                ...options,
+                headers : {
+                    'Accept' : 'application/json',
+                    ...(options.body ? {'Content-Type' : 'application/json'}
+                                     : {})
                 }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Failed to delete comment. Please try again.');
+            });
+        } catch {
+            return {
+                ok : false,
+                error :
+                    'Could not reach the server. Check your connection and try again.'
+            };
+        }
+        let data = null;
+        try {
+            data = await response.json();
+        } catch {
+            // not JSON (for example a redirect to the login page)
+        }
+        const landedOnLogin = response.redirected &&
+                              new URL(response.url).pathname === '/login';
+        if (response.status === 401 || landedOnLogin) {
+            return {
+                ok : false,
+                sessionEnded : true,
+                error : 'Your session ended. What you typed is still here.'
+            };
+        }
+        if (!response.ok || !data) {
+            return {
+                ok : false,
+                error : (data && data.error) ||
+                            'Something went wrong. Please try again.'
+            };
+        }
+        return {ok : true, data};
+    }
+
+    // Inline, announced feedback instead of alert().
+    function showStatus(statusEl, message, type, sessionEnded) {
+        if (!statusEl) return;
+        statusEl.replaceChildren(message);
+        statusEl.dataset.type = type;
+        if (sessionEnded) {
+            const link = document.createElement('a');
+            link.href = '/login?returnTo=' +
+                        encodeURIComponent(window.location.pathname);
+            link.textContent = 'Log in again';
+            statusEl.append(' ', link, '.');
+        }
+    }
+
+    function clearStatus(statusEl) {
+        if (!statusEl) return;
+        statusEl.replaceChildren();
+        delete statusEl.dataset.type;
+    }
+
+    // ----- Question box form (new and edit): keep a draft per form -----
+    document.querySelectorAll('form[data-draft-key]').forEach(form => {
+        const key = form.dataset.draftKey;
+        const fields = form.querySelectorAll('input[type="text"], textarea');
+        try {
+            const saved = JSON.parse(drafts.get(key) || 'null');
+            if (saved) {
+                fields.forEach(field => {
+                    if (typeof saved[field.name] === 'string') {
+                        field.value = saved[field.name];
+                    }
+                });
             }
+        } catch {
+            drafts.remove(key);
+        }
+        form.addEventListener('input', () => {
+            const values = {};
+            fields.forEach(field => { values[field.name] = field.value; });
+            drafts.set(key, JSON.stringify(values));
         });
+        const discard = form.querySelector('.js-discard-draft');
+        if (discard) discard.addEventListener('click', () => drafts.remove(key));
     });
 
-    replyButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const commentId = btn.getAttribute('data-comment-id');
-            const comment = btn.closest('.comment');
-            const replyFormContainer =
-                comment.querySelector('.reply-form-container');
-            replyFormContainer.style.display = 'block';
-            btn.style.display = 'none';
-        });
-    });
-    document.querySelectorAll('.btn-cancel-reply').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const form = btn.closest('.reply-form-container');
-            const comment = btn.closest('.comment');
-            const replyBtn = comment.querySelector('.btn-reply');
-            form.style.display = 'none';
-            if (replyBtn) replyBtn.style.display = 'inline-block';
-            form.querySelector('.reply-content').value = '';
-            form.querySelector('.reply-anonymous-checkbox').checked = false;
-        });
-    });
-    document.querySelectorAll('.reply-form').forEach(form => {
+    // ----- Plain forms that need a confirmation (delete question box) -----
+    document.querySelectorAll('form[data-confirm]').forEach(form => {
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const commentId = form.getAttribute('data-comment-id');
-            const content = form.querySelector('.reply-content').value;
-            const isAnonymous =
-                form.querySelector('.reply-anonymous-checkbox').checked;
-            try {
-                const response = await fetch('/api/reply', {
-                    method : 'POST',
-                    headers : {'Content-Type' : 'application/json'},
-                    body : JSON.stringify({
-                        comment_id : commentId,
-                        content : content,
-                        is_anonymous : isAnonymous
-                    })
-                });
-                if (response.ok) {
-                    const data = await response.json();
-                    addReplyToDOM(commentId, data.reply);
-                    form.querySelector('.reply-content').value = '';
-                    form.querySelector('.reply-anonymous-checkbox').checked =
-                        false;
-                    form.closest('.reply-form-container').style.display =
-                        'none';
-                    const replyBtn =
-                        form.closest('.comment').querySelector('.btn-reply');
-                    if (replyBtn) replyBtn.style.display = 'inline-block';
-                } else {
-                    const error = await response.json();
-                    alert('Error: ' + (error.error || 'Failed to post reply'));
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Failed to post reply. Please try again.');
+            if (await confirmAction(form.dataset.confirm)) {
+                HTMLFormElement.prototype.submit.call(form);
             }
         });
     });
 
-    deleteReplyButtons.forEach(btn => {
-        btn.addEventListener('click', async () => {
-            if (!confirm('Are you sure you want to delete this reply?')) {
-                return;
-            }
-            const replyId = btn.getAttribute('data-reply-id');
-            try {
-                const response =
-                    await fetch(`/api/reply/${replyId}`, {method : 'DELETE'});
-                if (response.ok) {
-                    const replyElement = btn.closest('.reply');
-                    replyElement.remove();
-                } else {
-                    const error = await response.json();
-                    alert('Error: ' +
-                          (error.error || 'Failed to delete reply'));
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Failed to delete reply. Please try again.');
-            }
-        });
-    });
+    // ----- Post page: comments and replies -----
+    const section = document.querySelector('.comments-section');
+    if (!section) return;
 
-    function addReplyToDOM(commentId, reply) {
-        const comment =
-            document.querySelector(`.comment[data-comment-id="${commentId}"]`);
-        let repliesList = comment.querySelector('.replies-list');
-        if (!repliesList) {
-            repliesList = document.createElement('div');
-            repliesList.className = 'replies-list';
-            comment.appendChild(repliesList);
-            repliesList.addEventListener('click', async (e) => {
-                if (e.target.classList.contains('btn-delete-reply')) {
-                    const replyId = e.target.getAttribute('data-reply-id');
-                    if (!confirm('Delete this reply?')) {
-                        return;
-                    }
-                    try {
-                        const res = await fetch(`/api/reply/${replyId}`,
-                                                {method : 'DELETE'});
-                        if (res.ok) {
-                            e.target.closest('.reply').remove();
-                        } else {
-                            alert('Failed to delete');
-                        }
-                    } catch (err) {
-                        console.error(err);
-                        alert('something went wrong');
-                    }
-                }
-            });
-        }
-        let displayName;
-        if (reply.is_anonymous) {
-            displayName = 'Anonymous';
-        } else {
-            displayName = reply.username;
-        }
-        const dateStr = new Date(reply.created_at).toLocaleString();
-        repliesList.insertAdjacentHTML(
-            'beforeend',  // use insertAdjacentHTML to handle comment elegantly
-            `
-            <div class="reply" data-reply-id="${reply.id}">
-                <div class="reply-header">
-                    <strong>${displayName}</strong>
-                    <span class="reply-date">${dateStr}</span>
-                </div>
-                <div class="reply-content">${reply.content}</div>
-                <button class="btn btn-small btn-delete-reply" data-reply-id="${
-                reply.id}">Delete</button>
-            </div>
-        `);
+    const commentsList = section.querySelector('.comments-list');
+    const sectionStatus = document.getElementById('comments-status');
+    const heading = document.getElementById('comments-heading');
+    const countEl = document.getElementById('comment-count');
+    const viewerIsAdmin = section.dataset.viewerAdmin === 'true';
+    const draftPrefix = `draft:${window.location.pathname}`;
+    const commentDraftKey = `${draftPrefix}:comment`;
+    const replyDraftKey = (commentId) => `${draftPrefix}:reply:${commentId}`;
+
+    function changeCount(delta) {
+        if (!countEl) return;
+        const next = Math.max(0, (parseInt(countEl.textContent, 10) || 0) + delta);
+        countEl.textContent = String(next);
     }
 
-    function addCommentToDOM(comment) {
-        const commentsList = document.querySelector('.comments-list');
-        const noComments = commentsList.querySelector('.no-comments');
-        if (noComments) {
-            noComments.remove();
+    function el(tag, className, text) {
+        const node = document.createElement(tag);
+        if (className) node.className = className;
+        if (text !== undefined) node.textContent = text;
+        return node;
+    }
+
+    function authorHeader(className, dateClass, item) {
+        const header = el('div', className);
+        header.append(el('strong', '', item.is_anonymous ? 'Anonymous'
+                                                         : item.username));
+        if (item.is_anonymous && viewerIsAdmin) {
+            header.append(
+                el('span', 'real-user', ` (actually: ${item.username})`));
         }
-        // Get post and user info from existing page elements
-        const existingComment = document.querySelector('.comment');
-        let postId, postAuthorId;
-        if (existingComment) {
-            postId = existingComment.getAttribute('data-post-id');
-            postAuthorId = existingComment.getAttribute('data-post-id');
-        } else {
-            postId = null;
-            postAuthorId = null;
-        }
-        const userInfoElement = document.querySelector(
-            '.welcome');  // try to get current user info from page context
-        const isLoggedIn = userInfoElement !== null;
-        const commentDiv = document.createElement('div');
-        commentDiv.className = 'comment';
-        commentDiv.setAttribute('data-comment-id', comment.id);
-        if (postId) commentDiv.setAttribute('data-post-id', postId);
-        commentDiv.setAttribute('data-comment-author-id', comment.user_id);
-        const commentHeader = document.createElement('div');
-        commentHeader.className = 'comment-header';
-        const userName = document.createElement('strong');
-        if (comment.is_anonymous) {
-            userName.textContent = 'Anonymous';
-        } else {
-            userName.textContent = comment.username;
-        }
-        const commentDate = document.createElement('span');
-        commentDate.className = 'comment-date';
-        commentDate.textContent = new Date(comment.created_at).toLocaleString();
-        commentHeader.appendChild(userName);
-        commentHeader.appendChild(commentDate);
-        const commentContent = document.createElement('div');
-        commentContent.className = 'comment-content';
-        commentContent.textContent = comment.content;
-        // Create comment actions container
-        const commentActions = document.createElement('div');
-        commentActions.className = 'comment-actions';
-        // Add Delete button (always show for comment owner)
-        const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'btn btn-small btn-delete-comment';
-        deleteBtn.setAttribute('data-comment-id', comment.id);
-        deleteBtn.textContent = 'Delete';
-        deleteBtn.addEventListener('click', async () => {
-            if (!confirm('Are you sure you want to delete this comment?')) {
-                return;
-            }
-            try {
-                const response = await fetch(`/api/comment/${comment.id}`,
-                                             {method : 'DELETE'});
-                if (response.ok) {
-                    commentDiv.remove();
-                } else {
-                    const error = await response.json();
-                    alert('Error: ' +
-                          (error.error || 'Failed to delete comment'));
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Failed to delete comment. Please try again.');
-            }
-        });
-        commentActions.appendChild(deleteBtn);
-        if (isLoggedIn) {  // Add Reply button if user is logged in
-            const replyBtn = document.createElement('button');
-            replyBtn.className = 'btn btn-small btn-reply';
-            replyBtn.setAttribute('data-comment-id', comment.id);
-            replyBtn.textContent = 'Reply';
-            replyBtn.addEventListener('click', () => {
-                const replyFormContainer =
-                    commentDiv.querySelector('.reply-form-container');
-                replyFormContainer.style.display = 'block';
-                replyBtn.style.display = 'none';
-            });
-            commentActions.appendChild(replyBtn);
-        }
-        const replyFormContainer = document.createElement('div');
-        replyFormContainer.className = 'reply-form-container';
-        replyFormContainer.style.display = 'none';
-        const replyForm = document.createElement('form');
-        replyForm.className = 'reply-form';
-        replyForm.setAttribute('data-comment-id', comment.id);
-        const replyTextarea = document.createElement('textarea');
-        replyTextarea.className = 'reply-content';
-        replyTextarea.name = 'content';
-        replyTextarea.placeholder = 'Write your reply...';
-        replyTextarea.required = true;
-        const formRow = document.createElement('div');
-        formRow.className = 'form-row';
-        const label = document.createElement('label');
-        const anonymousCheckbox = document.createElement('input');
-        anonymousCheckbox.className = 'reply-anonymous-checkbox';
-        anonymousCheckbox.type = 'checkbox';
-        anonymousCheckbox.name = 'is_anonymous';
-        label.appendChild(anonymousCheckbox);
-        label.appendChild(document.createTextNode(' Reply anonymously'));
-        const submitBtn = document.createElement('button');
-        submitBtn.className = 'btn btn-small';
+        header.append(el('span', dateClass,
+                         new Date(item.created_at).toLocaleString()));
+        return header;
+    }
+
+    function buildReply(reply) {
+        const replyEl = el('div', 'reply');
+        replyEl.dataset.replyId = reply.id;
+        const deleteBtn = el('button', 'btn btn-small btn-delete-reply', 'Delete');
+        deleteBtn.type = 'button';
+        deleteBtn.dataset.replyId = reply.id;
+        replyEl.append(authorHeader('reply-header', 'reply-date', reply),
+                       el('div', 'reply-content', reply.content), deleteBtn);
+        return replyEl;
+    }
+
+    function buildComment(comment) {
+        const commentEl = el('div', 'comment');
+        commentEl.dataset.commentId = comment.id;
+        commentEl.dataset.commentAuthorId = comment.user_id;
+
+        const actions = el('div', 'comment-actions');
+        const deleteBtn =
+            el('button', 'btn btn-small btn-delete-comment', 'Delete');
+        deleteBtn.type = 'button';
+        deleteBtn.dataset.commentId = comment.id;
+        // The author of a comment can always reply to it.
+        const replyBtn = el('button', 'btn btn-small btn-reply', 'Reply');
+        replyBtn.type = 'button';
+        replyBtn.dataset.commentId = comment.id;
+        actions.append(deleteBtn, replyBtn);
+
+        const container = el('div', 'reply-form-container');
+        container.style.display = 'none';
+        const form = el('form', 'reply-form');
+        form.dataset.commentId = comment.id;
+        const textarea = el('textarea', 'reply-content');
+        textarea.name = 'content';
+        textarea.placeholder = 'Write your reply...';
+        textarea.required = true;
+        const checkbox = el('input', 'reply-anonymous-checkbox');
+        checkbox.type = 'checkbox';
+        checkbox.name = 'is_anonymous';
+        const label = el('label');
+        label.append(checkbox, ' Reply anonymously');
+        const submitBtn = el('button', 'btn btn-small', 'Submit Reply');
         submitBtn.type = 'submit';
-        submitBtn.textContent = 'Submit Reply';
-        const cancelBtn = document.createElement('button');
-        cancelBtn.className = 'btn btn-small btn-cancel-reply';
+        const cancelBtn = el('button', 'btn btn-small btn-cancel-reply', 'Cancel');
         cancelBtn.type = 'button';
-        cancelBtn.textContent = 'Cancel';
-        cancelBtn.addEventListener('click', () => {
-            replyFormContainer.style.display = 'none';
-            const replyBtn = commentDiv.querySelector('.btn-reply');
-            if (replyBtn) replyBtn.style.display = 'inline-block';
-            replyTextarea.value = '';
-            anonymousCheckbox.checked = false;
-        });
-        formRow.appendChild(label);
-        formRow.appendChild(submitBtn);
-        formRow.appendChild(cancelBtn);
-        replyForm.appendChild(replyTextarea);
-        replyForm.appendChild(formRow);
-        replyForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const content = replyTextarea.value;
-            const isAnonymous = anonymousCheckbox.checked;
-            try {
-                const response = await fetch('/api/reply', {
-                    method : 'POST',
-                    headers : {'Content-Type' : 'application/json'},
-                    body : JSON.stringify({
-                        comment_id : comment.id,
-                        content : content,
-                        is_anonymous : isAnonymous
-                    })
-                });
-                if (response.ok) {
-                    const data = await response.json();
-                    addReplyToDOM(comment.id, data.reply);
-                    replyTextarea.value = '';
-                    anonymousCheckbox.checked = false;
-                    replyFormContainer.style.display = 'none';
-                    const replyBtn = commentDiv.querySelector('.btn-reply');
-                    if (replyBtn) replyBtn.style.display = 'inline-block';
-                } else {
-                    const error = await response.json();
-                    alert('Error: ' + (error.error || 'Failed to post reply'));
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Failed to post reply. Please try again.');
-            }
-        });
-        replyFormContainer.appendChild(replyForm);
+        const row = el('div', 'form-row');
+        row.append(label, submitBtn, cancelBtn);
+        const status = el('p', 'form-status');
+        status.setAttribute('role', 'status');
+        form.append(textarea, row, status);
+        container.append(form);
 
-        commentDiv.appendChild(commentHeader);  // Assemble the comment
-        commentDiv.appendChild(commentContent);
-        commentDiv.appendChild(commentActions);
-        commentDiv.appendChild(replyFormContainer);
-        commentsList.appendChild(commentDiv);
+        commentEl.append(authorHeader('comment-header', 'comment-date', comment),
+                         el('div', 'comment-content', comment.content), actions,
+                         container);
+        return commentEl;
     }
+
+    function openReplyForm(commentEl, focus) {
+        const container = commentEl.querySelector('.reply-form-container');
+        const replyBtn = commentEl.querySelector('.btn-reply');
+        container.style.display = 'block';
+        if (replyBtn) replyBtn.style.display = 'none';
+        if (focus) container.querySelector('.reply-content').focus();
+    }
+
+    function closeReplyForm(commentEl) {
+        const container = commentEl.querySelector('.reply-form-container');
+        const replyBtn = commentEl.querySelector('.btn-reply');
+        const form = container.querySelector('.reply-form');
+        container.style.display = 'none';
+        form.querySelector('.reply-content').value = '';
+        form.querySelector('.reply-anonymous-checkbox').checked = false;
+        clearStatus(form.querySelector('.form-status'));
+        drafts.remove(replyDraftKey(commentEl.dataset.commentId));
+        if (replyBtn) {
+            replyBtn.style.display = '';
+            replyBtn.focus();
+        }
+    }
+
+    function setBusy(form, busy) {
+        form.querySelectorAll('button[type="submit"]').forEach(btn => {
+            btn.disabled = busy;
+        });
+        form.setAttribute('aria-busy', busy ? 'true' : 'false');
+    }
+
+    // Restore drafts left behind by an expired session or a reload.
+    const commentForm = document.getElementById('comment-form');
+    if (commentForm) {
+        const saved = drafts.get(commentDraftKey);
+        if (saved) commentForm.querySelector('#comment-content').value = saved;
+    }
+    section.querySelectorAll('.reply-form').forEach(form => {
+        const saved = drafts.get(replyDraftKey(form.dataset.commentId));
+        if (saved) {
+            form.querySelector('.reply-content').value = saved;
+            openReplyForm(form.closest('.comment'), false);
+        }
+    });
+
+    section.addEventListener('input', (e) => {
+        if (e.target.id === 'comment-content') {
+            drafts.set(commentDraftKey, e.target.value);
+        } else if (e.target.classList.contains('reply-content')) {
+            const form = e.target.closest('.reply-form');
+            drafts.set(replyDraftKey(form.dataset.commentId), e.target.value);
+        }
+    });
+
+    async function submitComment(form) {
+        const textarea = form.querySelector('#comment-content');
+        const checkbox = form.querySelector('#anonymous-checkbox');
+        const status = form.querySelector('.form-status');
+        clearStatus(status);
+        setBusy(form, true);
+        const result = await send('/api/comment', {
+            method : 'POST',
+            body : JSON.stringify({
+                post_id : form.dataset.postId,
+                content : textarea.value,
+                is_anonymous : checkbox.checked
+            })
+        });
+        setBusy(form, false);
+        if (!result.ok) {
+            showStatus(status, result.error, 'error', result.sessionEnded);
+            return;
+        }
+        const noComments = commentsList.querySelector('.no-comments');
+        if (noComments) noComments.remove();
+        const commentEl = buildComment(result.data.comment);
+        commentsList.append(commentEl);
+        commentEl.scrollIntoView(
+            {block : 'nearest', behavior : prefersReducedMotion ? 'auto' : 'smooth'});
+        changeCount(1);
+        textarea.value = '';
+        checkbox.checked = false;
+        drafts.remove(commentDraftKey);
+        showStatus(status, 'Comment posted.', 'success');
+    }
+
+    async function submitReply(form) {
+        const commentEl = form.closest('.comment');
+        const commentId = form.dataset.commentId;
+        const textarea = form.querySelector('.reply-content');
+        const checkbox = form.querySelector('.reply-anonymous-checkbox');
+        const status = form.querySelector('.form-status');
+        clearStatus(status);
+        setBusy(form, true);
+        const result = await send('/api/reply', {
+            method : 'POST',
+            body : JSON.stringify({
+                comment_id : commentId,
+                content : textarea.value,
+                is_anonymous : checkbox.checked
+            })
+        });
+        setBusy(form, false);
+        if (!result.ok) {
+            showStatus(status, result.error, 'error', result.sessionEnded);
+            return;
+        }
+        let repliesList = commentEl.querySelector('.replies-list');
+        if (!repliesList) {
+            repliesList = el('div', 'replies-list');
+            commentEl.append(repliesList);
+        }
+        repliesList.append(buildReply(result.data.reply));
+        closeReplyForm(commentEl);
+        showStatus(sectionStatus, 'Reply posted.', 'success');
+    }
+
+    async function deleteItem(btn, kind) {
+        const isComment = kind === 'comment';
+        const confirmed = await confirmAction(
+            isComment ? 'Delete this comment and its replies?'
+                      : 'Delete this reply?');
+        if (!confirmed) return;
+        const id = isComment ? btn.dataset.commentId : btn.dataset.replyId;
+        btn.disabled = true;
+        const result = await send(`/api/${kind}/${id}`, {method : 'DELETE'});
+        btn.disabled = false;
+        if (!result.ok) {
+            showStatus(sectionStatus, result.error, 'error', result.sessionEnded);
+            btn.focus();
+            return;
+        }
+        if (isComment) {
+            const commentEl = btn.closest('.comment');
+            drafts.remove(replyDraftKey(commentEl.dataset.commentId));
+            commentEl.remove();
+            changeCount(-1);
+            if (!commentsList.querySelector('.comment')) {
+                commentsList.append(el('p', 'no-comments', 'No comments yet.'));
+            }
+        } else {
+            const repliesList = btn.closest('.replies-list');
+            btn.closest('.reply').remove();
+            if (repliesList && !repliesList.querySelector('.reply')) {
+                repliesList.remove();
+            }
+        }
+        showStatus(sectionStatus, isComment ? 'Comment deleted.' : 'Reply deleted.',
+                   'success');
+        // The button that had focus is gone; keep keyboard users in place.
+        if (heading) heading.focus();
+    }
+
+    // One delegated listener covers server-rendered and newly added items.
+    section.addEventListener('click', (e) => {
+        const btn = e.target.closest('button');
+        if (!btn || !section.contains(btn)) return;
+        if (btn.classList.contains('btn-reply')) {
+            openReplyForm(btn.closest('.comment'), true);
+        } else if (btn.classList.contains('btn-cancel-reply')) {
+            closeReplyForm(btn.closest('.comment'));
+        } else if (btn.classList.contains('btn-delete-comment')) {
+            deleteItem(btn, 'comment');
+        } else if (btn.classList.contains('btn-delete-reply')) {
+            deleteItem(btn, 'reply');
+        }
+    });
+
+    section.addEventListener('submit', (e) => {
+        const form = e.target;
+        if (form.id === 'comment-form') {
+            e.preventDefault();
+            submitComment(form);
+        } else if (form.classList.contains('reply-form')) {
+            e.preventDefault();
+            submitReply(form);
+        }
+    });
 });
