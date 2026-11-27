@@ -754,6 +754,29 @@ a:hover {
   margin-top: var(--space-2);
 }
 
+/* main.js focuses the nearest comment or reply after a delete. Show the
+ * ring only for keyboard users, like every other focus target. */
+.comment:focus,
+.reply:focus {
+  outline: none;
+}
+
+.comment:focus-visible,
+.reply:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: var(--space-1);
+}
+
+/* A deleted comment keeps only its "Comment deleted." line for a moment. */
+.comment.is-removed {
+  padding-block: var(--space-3);
+}
+
+.comment.is-removed .comment-status {
+  margin: 0;
+  color: var(--color-ink-muted);
+}
+
 .no-comments {
   padding: var(--space-5);
   text-align: center;

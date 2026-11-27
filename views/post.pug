@@ -29,7 +29,6 @@ block content
 
     section.comments-section(aria-labelledby="comments-heading" data-viewer-admin=user && user.isAdmin ? 'true' : false)
         h2#comments-heading(tabindex="-1") Comments (#[span#comment-count= comments.length])
-        p#comments-status.form-status(role="status")
 
         if user
             .comment-form
@@ -89,6 +88,10 @@ block content
                                         if user && (user.id === reply.user_id || user.isAdmin)
                                             .reply-actions
                                                 button.btn.btn-small.btn-delete-reply(type="button" data-reply-id=reply.id aria-label="Delete reply") Delete
+
+                        //- Results for this comment and its replies (reply posted,
+                        //- deleted, failed) are announced here, next to the change.
+                        p.form-status.comment-status(role="status")
 
     dialog#confirm-dialog(aria-labelledby="confirm-dialog-message")
         form(method="dialog")

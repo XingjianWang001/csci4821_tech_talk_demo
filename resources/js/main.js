@@ -229,13 +229,38 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!section) return;
 
     const commentsList = section.querySelector('.comments-list');
-    const sectionStatus = document.getElementById('comments-status');
     const heading = document.getElementById('comments-heading');
     const countEl = document.getElementById('comment-count');
     const viewerIsAdmin = section.dataset.viewerAdmin === 'true';
     const draftPrefix = `draft:${window.location.pathname}`;
     const commentDraftKey = `${draftPrefix}:comment`;
     const replyDraftKey = (commentId) => `${draftPrefix}:reply:${commentId}`;
+
+    // Feedback rules: success shows next to what changed (the comment's own
+    // status line), errors next to the control that was used. One message at
+    // a time: showing a status clears every other one, so the thread never
+    // says "posted" and "deleted" at once.
+    function report(statusEl, message, type, sessionEnded, options) {
+        section.querySelectorAll('.form-status').forEach(other => {
+            if (other === statusEl) return;
+            clearStatus(other);
+            // A deleted comment's placeholder goes as soon as it's cleared.
+            const removed = other.closest('.comment.is-removed');
+            if (removed) finishRemoval(removed);
+        });
+        showStatus(statusEl, message, type, sessionEnded, options);
+    }
+
+    function commentStatus(commentEl) {
+        return commentEl.querySelector(':scope > .comment-status');
+    }
+
+    // Keep keyboard and screen-reader users in place after something they
+    // were on disappears: focus the nearest remaining item.
+    function focusItem(itemEl) {
+        itemEl.setAttribute('tabindex', '-1');
+        itemEl.focus();
+    }
 
     function changeCount(delta) {
         if (!countEl) return;
@@ -332,9 +357,12 @@ document.addEventListener('DOMContentLoaded', () => {
         form.append(textareaLabel, textarea, row, status);
         container.append(form);
 
+        const commentStatusEl = el('p', 'form-status comment-status');
+        commentStatusEl.setAttribute('role', 'status');
+
         commentEl.append(...authorHeader('comment', comment),
                          el('div', 'comment-content', comment.content), actions,
-                         container);
+                         container, commentStatusEl);
         return commentEl;
     }
 
@@ -413,22 +441,30 @@ document.addEventListener('DOMContentLoaded', () => {
         }, "Couldn't add your comment. Refresh the page and try again.");
         setBusy(form, false);
         if (!result.ok) {
-            showStatus(status, result.error, 'error', result.sessionEnded);
+            report(status, result.error, 'error', result.sessionEnded);
             return;
         }
         const noComments = commentsList.querySelector('.no-comments');
         if (noComments) noComments.remove();
         const commentEl = buildComment(result.data.comment);
         commentsList.append(commentEl);
-        commentEl.scrollIntoView(
-            {block : 'nearest', behavior : prefersReducedMotion ? 'auto' : 'smooth'});
         changeCount(1);
         textarea.value = '';
         checkbox.checked = false;
         drafts.remove(commentDraftKey);
         markNew(commentEl);
-        showStatus(status, 'Comment posted. Thanks for joining in!', 'success',
-                   false, {paw : true});
+        // The new comment's status line was just inserted; wait a tick so
+        // screen readers register the live region before it changes. Scroll
+        // only once the acknowledgement has text, so it lands on screen too.
+        window.setTimeout(() => {
+            const statusEl = commentStatus(commentEl);
+            report(statusEl, 'Comment posted. Thanks for joining in!',
+                   'success', false, {paw : true});
+            statusEl.scrollIntoView({
+                block : 'nearest',
+                behavior : prefersReducedMotion ? 'auto' : 'smooth'
+            });
+        }, 50);
     }
 
     async function submitReply(form) {
@@ -449,20 +485,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }, "Couldn't add your reply. Refresh the page and try again.");
         setBusy(form, false);
         if (!result.ok) {
-            showStatus(status, result.error, 'error', result.sessionEnded);
+            report(status, result.error, 'error', result.sessionEnded);
             return;
         }
+        const statusEl = commentStatus(commentEl);
         let repliesList = commentEl.querySelector('.replies-list');
         if (!repliesList) {
             repliesList = el('div', 'replies-list');
-            commentEl.append(repliesList);
+            commentEl.insertBefore(repliesList, statusEl);
         }
         const replyEl = buildReply(result.data.reply);
         repliesList.append(replyEl);
         closeReplyForm(commentEl);
         markNew(replyEl);
-        showStatus(sectionStatus, 'Reply posted. Thanks for joining in!',
-                   'success', false, {paw : true});
+        report(statusEl, 'Reply posted. Thanks for joining in!', 'success',
+               false, {paw : true});
     }
 
     async function deleteItem(btn, kind) {
@@ -473,35 +510,64 @@ document.addEventListener('DOMContentLoaded', () => {
                 : "Delete this reply? This can't be undone.");
         if (!confirmed) return;
         const id = isComment ? btn.dataset.commentId : btn.dataset.replyId;
+        const commentEl = btn.closest('.comment');
+        const statusEl = commentStatus(commentEl);
         btn.disabled = true;
         const result = await send(
             `/api/${kind}/${id}`, {method : 'DELETE'},
             `Couldn't delete the ${kind}. Refresh the page and try again.`);
         btn.disabled = false;
         if (!result.ok) {
-            showStatus(sectionStatus, result.error, 'error', result.sessionEnded);
+            report(statusEl, result.error, 'error', result.sessionEnded);
             btn.focus();
             return;
         }
         if (isComment) {
-            const commentEl = btn.closest('.comment');
-            drafts.remove(replyDraftKey(commentEl.dataset.commentId));
-            commentEl.remove();
-            changeCount(-1);
-            if (!commentsList.querySelector('.comment')) {
-                commentsList.append(el('p', 'no-comments', 'No comments yet.'));
-            }
+            removeComment(commentEl, statusEl);
         } else {
-            const repliesList = btn.closest('.replies-list');
-            btn.closest('.reply').remove();
-            if (repliesList && !repliesList.querySelector('.reply')) {
-                repliesList.remove();
-            }
+            removeReply(btn.closest('.reply'), commentEl, statusEl);
         }
-        showStatus(sectionStatus, isComment ? 'Comment deleted.' : 'Reply deleted.',
-                   'success');
-        // The button that had focus is gone; keep keyboard users in place.
-        if (heading) heading.focus();
+    }
+
+    // A deleted comment leaves only its status line ("Comment deleted.") in
+    // place for a few seconds, so the result shows where the action happened.
+    function removeComment(commentEl, statusEl) {
+        drafts.remove(replyDraftKey(commentEl.dataset.commentId));
+        const isLive = (node) => node && node.classList.contains('comment') &&
+                                 !node.classList.contains('is-removed');
+        const neighbour = [ commentEl.nextElementSibling,
+                            commentEl.previousElementSibling ].find(isLive);
+        [...commentEl.children].forEach(child => {
+            if (child !== statusEl) child.remove();
+        });
+        commentEl.classList.add('is-removed');
+        changeCount(-1);
+        report(statusEl, 'Comment deleted.', 'success');
+        if (neighbour) {
+            focusItem(neighbour);
+        } else if (heading) {
+            heading.focus();
+        }
+        commentEl.removalTimer =
+            window.setTimeout(() => finishRemoval(commentEl), 4000);
+    }
+
+    function finishRemoval(commentEl) {
+        window.clearTimeout(commentEl.removalTimer);
+        commentEl.remove();
+        if (!commentsList.querySelector('.comment, .no-comments')) {
+            commentsList.append(el('p', 'no-comments', 'No comments yet.'));
+        }
+    }
+
+    function removeReply(replyEl, commentEl, statusEl) {
+        const repliesList = replyEl.parentElement;
+        const neighbour =
+            replyEl.nextElementSibling || replyEl.previousElementSibling;
+        replyEl.remove();
+        if (!repliesList.querySelector('.reply')) repliesList.remove();
+        report(statusEl, 'Reply deleted.', 'success');
+        focusItem(neighbour || commentEl);
     }
 
     // One delegated listener covers server-rendered and newly added items.
