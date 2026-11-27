@@ -396,7 +396,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (focus) clearStatuses(null);
         if (replyBtn) {
             replyBtn.setAttribute('aria-expanded', 'true');
-            replyBtn.textContent = 'Replying…';
         }
         if (focus) container.querySelector('.reply-input').focus();
     }
@@ -412,7 +411,6 @@ document.addEventListener('DOMContentLoaded', () => {
         drafts.remove(replyDraftKey(commentEl.dataset.commentId));
         if (replyBtn) {
             replyBtn.setAttribute('aria-expanded', 'false');
-            replyBtn.textContent = 'Reply';
             replyBtn.focus();
         }
     }

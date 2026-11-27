@@ -137,7 +137,7 @@ The type, layout and Shiba motif follow the same idea: warm and friendly at a gl
 **Key Characteristics:**
 - Warm cream canvas with one paper-white content surface. No grey anywhere.
 - One strong red-tan accent for page headings, the brand, links and the primary action.
-- Quiet sesame-yellow secondary for everyday actions (Edit, Reply, Cancel, pagination).
+- Quiet sesame-yellow secondary for everyday actions (Edit, Cancel, pagination); in the thread, Reply is ink text and only Delete is red.
 - Red appears only on Delete.
 - Every text and control pair meets WCAG AA, most well above it.
 
@@ -191,7 +191,7 @@ Rules use semantic roles only, never primitives or raw values. The roles are def
 ### Named Rules
 **The One Coat Rule.** Every color comes from the Shiba family or from a status role. No Bootstrap blue, no neutral grey, no borrowed alert palettes.
 
-**The Red Means Delete Rule.** Warning Red appears only on delete actions and error feedback. Edit, Reply and Cancel are never red or blue. They use the quiet yellow secondary.
+**The Red Means Delete Rule.** Warning Red appears only on delete actions and error feedback. Edit, Reply and Cancel are never red, red-tan or blue. Edit and Cancel use the quiet yellow secondary; Reply is ink text that takes the yellow fill on hover, focus, or while its form is open.
 
 **The Token-Only Rule.** No hex, rgb or named color appears in a CSS rule outside `:root`. To change the palette, change the primitive. To change what something means, remap the role.
 
@@ -257,7 +257,7 @@ Three roles that are distinct in fill as well as hue, so they can't be confused 
 - **Primary:** a red-tan fill with cream text (5.9:1). Use one per view: Publish / Save Changes, Log In, Register, Add Comment, Add Reply, Write the First One, Go Back Home. Hover deepens to Deep Red-Tan.
 - **Secondary:** the default button. A sesame-yellow fill, Shiba Black text and a Whisker outline. Used for Edit, Cancel and pagination. Hover goes to Deep Sesame.
 - **Destructive:** on a question box, a paper fill with a Warning Red outline and text, filling solid red on hover. On comments and replies, a quiet red text button that only gains its outline on hover or focus, and it always comes after Reply.
-- **Thread actions (Reply, comment/reply Delete):** quiet text buttons, so a comment outweighs its actions. Reply is red-tan text that takes the sesame fill on hover or focus; Delete is red text that takes its outline on hover or focus. Both keep a 40px hit area. While its form is open, Reply stays in place as a muted "Replying…" (`aria-expanded="true"`) and reserves that width, so Delete never moves. Accessible names include the author ("Reply to comment by demo_viewer").
+- **Thread actions (Reply, comment/reply Delete):** quiet text buttons, so a comment outweighs its actions. Reply is Shiba Black ink text that takes the sesame fill on hover or focus; Delete is Warning Red text that takes its outline on hover or focus, so in the thread ink means act and red means delete. Both keep a 40px hit area. While its form is open, Reply keeps its label and shows as pressed (sesame fill and outline, `aria-expanded="true"`); its width never changes, so Delete never moves. Accessible names include the author ("Reply to comment by demo_viewer").
 - **States:** hover, `:active` (1px press), `:focus-visible` (2px Deep Red-Tan outline, offset 2px) and `:disabled` (60% opacity, not-allowed cursor). While a request runs, the button says so ("Posting…", "Deleting…").
 - **Delete dialog:** a `<dialog>` with a Young Serif heading ("Delete this comment?") and a plain message that names what goes with it, mentioning replies only when there are some. Cancel has focus; Esc cancels.
 

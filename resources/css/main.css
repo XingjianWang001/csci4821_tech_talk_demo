@@ -839,12 +839,11 @@ a:hover {
 }
 
 .btn.btn-reply {
-  /* Wide enough for "Replying…", so Delete doesn't move when it swaps in. */
-  min-width: 7.5em;
-  justify-content: flex-start;
+  /* Ink, not red-tan: in the thread, ink means "act" and Warning Red means
+   * "delete", so the two can't blur together under video compression. */
   background-color: transparent;
   border-color: transparent;
-  color: var(--color-accent);
+  color: var(--color-ink);
 }
 
 .btn.btn-reply:hover,
@@ -854,15 +853,13 @@ a:hover {
   color: var(--color-ink);
 }
 
-/* While its form is open, Reply stays in place as a quiet "Replying…"
- * marker, so Delete never slides under the pointer. */
+/* While its form is open, Reply keeps its label and shows as pressed. Its
+ * width never changes, so Delete never moves under the pointer. */
 .btn.btn-reply[aria-expanded="true"],
 .btn.btn-reply[aria-expanded="true"]:hover {
-  background-color: transparent;
-  border-color: transparent;
-  color: var(--color-ink-muted);
-  font-weight: var(--weight-regular);
-  cursor: default;
+  background-color: var(--color-secondary);
+  border-color: var(--color-border-strong);
+  color: var(--color-ink);
 }
 
 .reply-rule {
