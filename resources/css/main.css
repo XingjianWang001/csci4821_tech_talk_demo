@@ -78,6 +78,7 @@ body {
   padding: 8px 15px;
   border-radius: 5px;
   background-color: transparent;
+  white-space: nowrap;
 }
 
 .nav-link:hover {
@@ -557,4 +558,37 @@ body {
 
 .footer p {
   margin: 5px 0;
+}
+
+/* helper text: definitions, anonymity and reply rules */
+.home-intro {
+  margin: -4px 0 20px;
+  color: #555;
+}
+
+.no-posts {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.anon-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.field-hint,
+.reply-rule {
+  margin: 2px 0 0;
+  color: #666;
+  font-size: 0.85em;
+}
+
+.reply-rule {
+  margin: 0;
+}
+
+.author-name .real-user {
+  margin-left: 8px;
 }
