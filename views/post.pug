@@ -19,15 +19,16 @@ block content
         header.post-header
             h1= post.title
             p.post-meta
-                span.author by #{post.author_name}
-                time.date(datetime=isoDate(post.created_at))= formatDate(post.created_at)
-                if post.updated_at
-                    span.updated edited #[time(datetime=isoDate(post.updated_at))= formatDate(post.updated_at)]
+                span.post-meta-items
+                    span.author by #{post.author_name}
+                    time.date(datetime=isoDate(post.created_at))= formatDate(post.created_at)
+                    if post.updated_at
+                        span.updated edited #[time(datetime=isoDate(post.updated_at))= formatDate(post.updated_at)]
 
             if user && (user.id === post.author_id || user.isAdmin)
                 .post-actions
                     a.btn.btn-edit(href=`/post/${post.id}/edit`) Edit
-                    form.inline-form(action=`/post/${post.id}/delete` method="POST" data-confirm=`Delete the question box “${post.title}”? Its comments and replies will be deleted too. This can't be undone.`)
+                    form.inline-form(action=`/post/${post.id}/delete` method="POST" data-confirm-title="Delete this question box?" data-confirm=`“${post.title}” and all of its comments and replies will be deleted. This can't be undone.`)
                         button.btn.btn-delete(type="submit") Delete
 
         .post-content= post.content
@@ -112,8 +113,9 @@ block content
     template#no-comments-template
         +noComments()
 
-    dialog#confirm-dialog(aria-labelledby="confirm-dialog-message")
+    dialog#confirm-dialog(aria-labelledby="confirm-dialog-title" aria-describedby="confirm-dialog-message")
         form(method="dialog")
+            h2#confirm-dialog-title
             p#confirm-dialog-message
             .form-row.dialog-actions
                 button.btn.btn-secondary(type="submit" value="cancel" autofocus) Cancel

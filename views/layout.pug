@@ -39,7 +39,9 @@ html(lang="en")
 
         main.page
             if message
-                .message(class=messageType role=messageType === 'error' ? 'alert' : 'status')
+                .message(class=[messageType, pageWidth === 'narrow' ? 'message--narrow' : null] role=messageType === 'error' ? 'alert' : 'status')
+                    if messageType === 'success'
+                        +paw('message-paw')
                     p.message-text= message
                     button.message-dismiss(type="button" aria-label="Dismiss message")
                         span(aria-hidden="true") ×

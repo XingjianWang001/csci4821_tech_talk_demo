@@ -387,6 +387,18 @@ a:hover {
   font-weight: var(--weight-bold);
 }
 
+/* On login, register and 404 the flash matches the narrow card below it. */
+.message--narrow {
+  max-width: var(--column-narrow);
+  margin-inline: auto;
+}
+
+.message-paw {
+  width: 1.15em;
+  height: 1.15em;
+  margin-top: var(--space-1);
+}
+
 .message-text {
   flex: 1;
   padding-block: 2px;
@@ -516,17 +528,25 @@ a:hover {
 }
 
 .post-meta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0 var(--space-3);
+  overflow: hidden;
   font-size: var(--text-sm);
   color: var(--color-ink-muted);
 }
 
-.post-meta > * + *::before {
+/* Every item carries a leading dot; the dots that start a line sit in the
+ * negative margin and are clipped, so a wrapped line never opens with "·". */
+.post-meta-items {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  margin-left: -1.5em;
+}
+
+.post-meta-items > *::before {
   content: "·";
-  margin-right: var(--space-3);
+  display: inline-block;
+  width: 1.5em;
+  text-align: center;
 }
 
 /* Question boxes with a conversation stand out from quiet ones. */
@@ -1125,7 +1145,7 @@ a:hover {
 }
 
 .btn-small {
-  min-height: 34px;
+  min-height: 40px;
   padding: var(--space-1) var(--space-3);
   font-size: var(--text-sm);
 }
@@ -1171,9 +1191,13 @@ a:hover {
   background-color: var(--color-scrim);
 }
 
+#confirm-dialog h2 {
+  margin-bottom: var(--space-2);
+  font-size: var(--text-md);
+}
+
 #confirm-dialog p {
   margin-bottom: var(--space-5);
-  font-weight: var(--weight-bold);
 }
 
 .dialog-actions {

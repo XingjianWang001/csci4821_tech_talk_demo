@@ -96,11 +96,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Accessible replacement for confirm(). Falls back to confirm() only in
     // browsers without <dialog>.
-    function confirmAction(message) {
+    function confirmAction(title, message) {
         const dialog = document.getElementById('confirm-dialog');
         if (!dialog || typeof dialog.showModal !== 'function') {
-            return Promise.resolve(window.confirm(message));
+            return Promise.resolve(window.confirm(`${title} ${message}`));
         }
+        dialog.querySelector('#confirm-dialog-title').textContent = title;
         dialog.querySelector('#confirm-dialog-message').textContent = message;
         dialog.returnValue = '';
         dialog.showModal();
@@ -218,7 +219,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('form[data-confirm]').forEach(form => {
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            if (await confirmAction(form.dataset.confirm)) {
+            if (await confirmAction(form.dataset.confirmTitle || 'Are you sure?',
+                                    form.dataset.confirm)) {
                 HTMLFormElement.prototype.submit.call(form);
             }
         });
@@ -242,14 +244,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // a time: showing a status clears every other one, so the thread never
     // says "posted" and "deleted" at once.
     function report(statusEl, message, type, sessionEnded, options) {
+        clearStatuses(statusEl);
+        showStatus(statusEl, message, type, sessionEnded, options);
+    }
+
+    // Clears every status in the thread except `keep`. A deleted comment's
+    // placeholder goes as soon as its status is cleared.
+    function clearStatuses(keep) {
         section.querySelectorAll('.form-status').forEach(other => {
-            if (other === statusEl) return;
+            if (other === keep) return;
             clearStatus(other);
-            // A deleted comment's placeholder goes as soon as it's cleared.
             const removed = other.closest('.comment.is-removed');
             if (removed) finishRemoval(removed);
         });
-        showStatus(statusEl, message, type, sessionEnded, options);
     }
 
     function commentStatus(commentEl) {
@@ -385,6 +392,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const container = commentEl.querySelector('.reply-form-container');
         const replyBtn = commentEl.querySelector('.btn-reply');
         container.hidden = false;
+        // Starting a new reply makes earlier "posted"/"deleted" lines stale.
+        if (focus) clearStatuses(null);
         if (replyBtn) {
             replyBtn.setAttribute('aria-expanded', 'true');
             replyBtn.textContent = 'Replying…';
@@ -414,9 +423,18 @@ document.addEventListener('DOMContentLoaded', () => {
         window.setTimeout(() => itemEl.classList.remove('is-new'), 2400);
     }
 
+    // While a request runs, the submit button says what's happening instead
+    // of only greying out.
     function setBusy(form, busy) {
         form.querySelectorAll('button[type="submit"]').forEach(btn => {
             btn.disabled = busy;
+            if (busy) {
+                btn.dataset.label = btn.textContent;
+                btn.textContent = 'Posting…';
+            } else if (btn.dataset.label) {
+                btn.textContent = btn.dataset.label;
+                delete btn.dataset.label;
+            }
         });
         form.setAttribute('aria-busy', busy ? 'true' : 'false');
     }
@@ -538,19 +556,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function deleteItem(btn, kind) {
         const isComment = kind === 'comment';
+        // Mention replies only when the comment actually has some.
+        const replyCount = isComment
+            ? btn.closest('.comment').querySelectorAll('.reply').length
+            : 0;
         const confirmed = await confirmAction(
-            isComment
-                ? "Delete this comment and all of its replies? This can't be undone."
-                : "Delete this reply? This can't be undone.");
+            isComment ? 'Delete this comment?' : 'Delete this reply?',
+            replyCount === 0
+                ? "This can't be undone."
+                : `Its ${replyCount === 1 ? 'reply' : `${replyCount} replies`} will be deleted too. This can't be undone.`);
         if (!confirmed) return;
         const id = isComment ? btn.dataset.commentId : btn.dataset.replyId;
         const commentEl = btn.closest('.comment');
         const statusEl = commentStatus(commentEl);
         btn.disabled = true;
+        const label = btn.textContent;
+        btn.textContent = 'Deleting…';
         const result = await send(
             `/api/${kind}/${id}`, {method : 'DELETE'},
             `Couldn't delete the ${kind}. Refresh the page and try again.`);
         btn.disabled = false;
+        btn.textContent = label;
         if (!result.ok) {
             report(statusEl, result.error, 'error', result.sessionEnded);
             btn.focus();

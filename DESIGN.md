@@ -221,7 +221,7 @@ Line heights: `--leading-tight` 1.15 (headings), `--leading-snug` 1.35 (buttons,
 - Headings are display, weight 400, `text-wrap: balance`. Body text uses `text-wrap: pretty`.
 - Bodies, comments, list previews and intro lines are capped at `--measure` (56ch). `ch` is the width of a "0", wider than Atkinson's average letter, so 56ch holds about 73 characters. Post bodies keep `white-space: pre-wrap`.
 - Titles, bodies, comments and author names use `overflow-wrap: anywhere`, so one very long word wraps instead of overflowing.
-- Meta lines (author · date · comments) are `--text-sm` in Bark, separated by middle dots. They support the title and never compete with it. In the list, a non-zero comment count is bold Shiba Black ("No comments yet" stays muted), so rows with a conversation stand out.
+- Meta lines (author · date · comments) are `--text-sm` in Bark, separated by middle dots. They support the title and never compete with it. Every item carries a leading dot that is clipped at the start of a line, so a wrapped meta line never opens with "·". In the list, a non-zero comment count is bold Shiba Black ("No comments yet" stays muted), so rows with a conversation stand out.
 - **List hierarchy:** title in Young Serif `--text-lg`, Shiba Black, turning red-tan with an underline on hover or focus; then the meta line; then the preview at `--text-sm`. Every list title in red-tan made the list a monotone wall, so the accent is reserved for the page h1 and for the row under the pointer.
 - Dates use one format everywhere, with no seconds: `Nov 27, 2026, 3:04 PM` (`formatDate` in `server.js`, the same `Intl.DateTimeFormat` options in `main.js`). They render in `<time datetime>`.
 
@@ -253,12 +253,13 @@ Gently rounded and consistent. The content surface and the dialog have 12px corn
 
 ### Buttons
 Three roles that are distinct in fill as well as hue, so they can't be confused at a glance.
-- **Shape:** 6px corners, a 1px border, bold label. Links and buttons share one box (`inline-flex`, explicit line height, 44px min height; 34px for `.btn-small`), so Edit and Delete line up.
+- **Shape:** 6px corners, a 1px border, bold label. Links and buttons share one box (`inline-flex`, explicit line height, 44px min height; 40px for `.btn-small`), so Edit and Delete line up.
 - **Primary:** a red-tan fill with cream text (5.9:1). Use one per view: Publish / Save Changes, Log In, Register, Add Comment, Add Reply, Write the First One, Go Back Home. Hover deepens to Deep Red-Tan.
 - **Secondary:** the default button. A sesame-yellow fill, Shiba Black text and a Whisker outline. Used for Edit, Cancel and pagination. Hover goes to Deep Sesame.
 - **Destructive:** on a question box, a paper fill with a Warning Red outline and text, filling solid red on hover. On comments and replies, a quiet red text button that only gains its outline on hover or focus, and it always comes after Reply.
 - **Thread actions (Reply, comment/reply Delete):** quiet text buttons, so a comment outweighs its actions. Reply is red-tan text that takes the sesame fill on hover or focus; Delete is red text that takes its outline on hover or focus. Both keep a 40px hit area. While its form is open, Reply stays in place as a muted "Replying…" (`aria-expanded="true"`) and reserves that width, so Delete never moves. Accessible names include the author ("Reply to comment by demo_viewer").
-- **States:** hover, `:active` (1px press), `:focus-visible` (2px Deep Red-Tan outline, offset 2px) and `:disabled` (60% opacity, not-allowed cursor).
+- **States:** hover, `:active` (1px press), `:focus-visible` (2px Deep Red-Tan outline, offset 2px) and `:disabled` (60% opacity, not-allowed cursor). While a request runs, the button says so ("Posting…", "Deleting…").
+- **Delete dialog:** a `<dialog>` with a Young Serif heading ("Delete this comment?") and a plain message that names what goes with it, mentioning replies only when there are some. Cancel has focus; Esc cancels.
 
 ### Cards / Containers
 - **Content surface:** Paper, with a 1px hairline border, 10px corners and 30px padding. It is the only container.
@@ -280,7 +281,7 @@ Three roles that are distinct in fill as well as hue, so they can't be confused 
 On an anonymous comment or reply, admins see a tag under the author line: "Posted anonymously by **name** · only admins see this". It is a dashed red-tan outline on Sun Wash with Deep Red-Tan text (about 7:1), never stray text in the header row.
 
 ### Flash messages
-Below the header, inside the page column, above the content surface. A 1px border in the status color over its wash, bold text, and a dismiss (×) button; dismissing moves focus to the page heading. Errors use `role="alert"`, everything else `role="status"`. Success uses Leaf Green on Leaf Wash, error uses Deep Warning Red on Warn Wash with a Warning Red border, and info uses Shiba Black on Sun Wash.
+Below the header, inside the page column, above the content surface. On narrow pages (login, register, 404) it narrows to the 440px card under it. Success flashes start with the paw, the same acknowledgement as a posted comment. A 1px border in the status color over its wash, bold text, and a dismiss (×) button; dismissing moves focus to the page heading. Errors use `role="alert"`, everything else `role="status"`. Success uses Leaf Green on Leaf Wash, error uses Deep Warning Red on Warn Wash with a Warning Red border, and info uses Shiba Black on Sun Wash.
 
 ## Shiba Motif
 
