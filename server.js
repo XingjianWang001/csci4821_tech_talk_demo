@@ -3,6 +3,7 @@ const session = require('express-session');
 const bcrypt = require('bcrypt');
 const data = require('./data');
 const {FIELD_MESSAGES, blankMessage} = require('./resources/js/field-messages');
+const threadText = require('./resources/js/thread-text');
 const app = express();
 const port = process.env.PORT || 4131;
 
@@ -111,6 +112,7 @@ function isoDate(value) {
 app.locals.formatDate = formatDate;
 app.locals.isoDate = isoDate;
 app.locals.excerpt = excerpt;
+Object.assign(app.locals, threadText);  // authorName, byline, commentWord
 
 app.use((req, res, next) => {
     res.locals.currentPath = req.path;

@@ -7,7 +7,7 @@ mixin noComments()
 
 mixin authorLine(item, kind)
     .author-line(class=`${kind}-header`)
-        strong.author-name= item.is_anonymous ? 'Anonymous' : item.username
+        strong.author-name= authorName(item)
         time(class=`${kind}-date` datetime=isoDate(item.created_at))= formatDate(item.created_at)
         //- The admin's reveal: a small dark pill in the author line, in the
         //- same dark-and-tan as the Admin badge, so it reads as admin-only.
@@ -37,7 +37,7 @@ block content
 
                 if user && (user.id === post.author_id || user.isAdmin)
                     - var n = comments.length
-                    - var deleteMessage = n === 0 ? `“${post.title}” will be deleted. This can't be undone.` : `“${post.title}” and its ${n === 1 ? 'comment' : `${n} comments`}, with any replies, will be deleted. This can't be undone.`
+                    - var deleteMessage = n === 0 ? `“${post.title}” will be deleted. This can't be undone.` : `“${post.title}” and its ${n === 1 ? '' : `${n} `}${commentWord(n)}, with any replies, will be deleted. This can't be undone.`
                     .post-actions
                         a.btn.btn-small.btn-edit(href=`/post/${post.id}/edit` aria-label="Edit this question box") Edit
                         form.inline-form(action=`/post/${post.id}/delete` method="POST" data-confirm-title="Delete this question box?" data-confirm=deleteMessage)
@@ -52,9 +52,9 @@ block content
             //- With no comments the heading steps back to a muted "Comments" so
             //- the sleepy-Shiba empty state leads instead of a big red 0.
             h2#comments-heading(tabindex="-1" class=comments.length === 0 ? 'is-empty' : undefined)
-                span#comment-count.comments-count= comments.length
+                span#comment-count.count-numeral= comments.length
                 = ' '
-                span#comment-count-label.comments-label= comments.length === 0 ? 'Comments' : comments.length === 1 ? 'comment' : 'comments'
+                span#comment-count-label.comments-label= comments.length === 0 ? 'Comments' : commentWord(comments.length)
             if user && comments.length > 0
                 a.comments-jump(href="#leave-comment") Write a comment
         if someLocked
@@ -71,7 +71,7 @@ block content
                         .comment-content= comment.content
                         //- Author plus the visible time, so two comments by the
                         //- same person get distinct accessible names.
-                        - var commentBy = `comment by ${comment.is_anonymous ? 'Anonymous' : comment.username}, ${formatDate(comment.created_at)}`
+                        - var commentBy = `comment by ${byline(comment, formatDate(comment.created_at))}`
                         .comment-actions
                             if canReply(comment)
                                 button.btn.btn-small.btn-reply(type="button" data-comment-id=comment.id aria-expanded="false" aria-controls=`reply-form-${comment.id}` aria-label=`Reply to ${commentBy}`) Reply
@@ -101,7 +101,7 @@ block content
                                         .reply-content= reply.content
                                         if user && (user.id === reply.user_id || user.isAdmin)
                                             .reply-actions
-                                                button.btn.btn-small.btn-delete-reply(type="button" data-reply-id=reply.id aria-label=`Delete reply by ${reply.is_anonymous ? 'Anonymous' : reply.username}, ${formatDate(reply.created_at)}`) Delete
+                                                button.btn.btn-small.btn-delete-reply(type="button" data-reply-id=reply.id aria-label=`Delete reply by ${byline(reply, formatDate(reply.created_at))}`) Delete
 
                         //- Results for this comment and its replies (reply posted,
                         //- deleted, failed) are announced here, next to the change.

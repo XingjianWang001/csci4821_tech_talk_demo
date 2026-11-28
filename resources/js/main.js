@@ -56,6 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
                      'input[required][type="password"], textarea[required]';
 
     const {fieldBlankMessage} = window.FieldMessages;
+    const {authorName, byline, commentWord} = window.ThreadText;
 
     function setFieldError(field, message) {
         const id = `${field.id}-error`;
@@ -376,8 +377,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const next = Math.max(0, (parseInt(countEl.textContent, 10) || 0) + delta);
         countEl.textContent = String(next);
         if (countLabelEl) {
-            countLabelEl.textContent =
-                next === 0 ? 'Comments' : next === 1 ? 'comment' : 'comments';
+            countLabelEl.textContent = next === 0 ? 'Comments' : commentWord(next);
         }
         if (heading) heading.classList.toggle('is-empty', next === 0);
     }
@@ -393,10 +393,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // the admin's anonymous-author reveal under it. Returns a node list.
     function authorHeader(kind, item) {
         const header = el('div', `author-line ${kind}-header`);
-        header.append(
-            el('strong', 'author-name',
-               item.is_anonymous ? 'Anonymous' : item.username),
-            timeEl(`${kind}-date`, item));
+        header.append(el('strong', 'author-name', authorName(item)),
+                      timeEl(`${kind}-date`, item));
         if (item.is_anonymous && viewerIsAdmin) {
             const text = el('span', '', 'Posted anonymously by ');
             text.append(el('strong', '', item.username),
@@ -411,12 +409,10 @@ document.addEventListener('DOMContentLoaded', () => {
         return [ header ];
     }
 
-    // Names used in accessible labels: author plus the visible time, so two
-    // comments by the same person still get distinct Reply/Delete names.
-    function authorName(item) {
-        const name = item.is_anonymous ? 'Anonymous' : item.username;
-        return item.created_label ? `${name}, ${item.created_label}` : name;
-    }
+    // Accessible names: author plus the visible time (thread-text.js, which
+    // the server templates use too), so two comments by the same person
+    // still get distinct Reply/Delete names.
+    const itemBy = (item) => byline(item, item.created_label);
 
     function buildReply(reply) {
         const replyEl = el('div', 'reply');
@@ -425,7 +421,7 @@ document.addEventListener('DOMContentLoaded', () => {
         deleteBtn.type = 'button';
         deleteBtn.dataset.replyId = reply.id;
         deleteBtn.setAttribute('aria-label',
-                               `Delete reply by ${authorName(reply)}`);
+                               `Delete reply by ${itemBy(reply)}`);
         const actions = el('div', 'reply-actions');
         actions.append(deleteBtn);
         replyEl.append(...authorHeader('reply', reply),
@@ -444,13 +440,13 @@ document.addEventListener('DOMContentLoaded', () => {
         deleteBtn.type = 'button';
         deleteBtn.dataset.commentId = comment.id;
         deleteBtn.setAttribute('aria-label',
-                               `Delete comment by ${authorName(comment)}`);
+                               `Delete comment by ${itemBy(comment)}`);
         // The author of a comment can always reply to it.
         const replyBtn = el('button', 'btn btn-small btn-reply', 'Reply');
         replyBtn.type = 'button';
         replyBtn.dataset.commentId = comment.id;
         replyBtn.setAttribute('aria-label',
-                              `Reply to comment by ${authorName(comment)}`);
+                              `Reply to comment by ${itemBy(comment)}`);
         replyBtn.setAttribute('aria-expanded', 'false');
         replyBtn.setAttribute('aria-controls', `reply-form-${comment.id}`);
         actions.append(replyBtn, deleteBtn);
