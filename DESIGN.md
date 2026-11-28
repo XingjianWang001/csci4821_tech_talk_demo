@@ -223,7 +223,7 @@ Line heights: `--leading-tight` 1.15 (headings), `--leading-snug` 1.35 (buttons,
 - Titles, bodies, comments and author names use `overflow-wrap: anywhere`, so one very long word wraps instead of overflowing.
 - Meta lines (author · date · comments) are `--text-sm` in Bark, separated by middle dots. They support the title and never compete with it. Every item carries a leading dot that is clipped at the start of a line, so a wrapped meta line never opens with "·". In the list, a non-zero comment count is bold Shiba Black ("No comments yet" stays muted), so rows with a conversation stand out.
 - **List hierarchy:** title in Young Serif `--text-lg`, Shiba Black, turning red-tan with an underline on hover or focus; then the meta line; then the preview at `--text-sm`. Every list title in red-tan made the list a monotone wall, so the accent is reserved for the page h1 and for the row under the pointer.
-- Dates use one format everywhere, with no seconds: `Nov 27, 2026, 3:04 PM` (`formatDate` in `server.js`, the same `Intl.DateTimeFormat` options in `main.js`). They render in `<time datetime>`.
+- Dates use one format everywhere, with no seconds: `Nov 27, 3:04 PM` in the current year and `Nov 27, 2025, 3:04 PM` otherwise (the year is noise in every meta line, and Atkinson's slashed zero made "2026" read oddly) (`formatDate` in `server.js`, the same `Intl.DateTimeFormat` options in `main.js`). They render in `<time datetime>`.
 
 ## Layout
 
@@ -265,7 +265,8 @@ Three roles that are distinct in fill as well as hue, so they can't be confused 
 ### Cards / Containers
 - **Content surface:** Paper, with a 1px hairline border, 10px corners and 30px padding. It is the only container.
 - **Question boxes in the list:** not cards. Each is an `article` row divided by hairlines; the title link's `::after` covers the whole row, so the row is one link target. Keyboard focus outlines the whole row. The preview is cut on a word boundary (200-character budget) and clamped to three lines.
-- **Comment count:** the thread's heading leads with the count as a red-tan Young Serif numeral at `--text-xl`, then "comment"/"comments" at `--text-lg` (`main.js` keeps both in sync).
+- **Comment count:** the thread's heading leads with the count as a red-tan Young Serif numeral at `--text-xl`, then "comment"/"comments" at `--text-lg` (`main.js` keeps both in sync). With no comments the numeral hides and the heading is a muted "Comments", so the sleepy-Shiba empty state leads.
+- **Reply rule:** "Only the question box author, the commenter or an admin can reply." appears once under the heading, and only for a logged-in reader who can't reply to at least one comment.
 - **One composer at a time:** while any reply form is open, Add Comment steps down to the secondary look, so Add Reply is the only filled button.
 - **Comment thread order:** the count heading (with a "Write a comment" jump link when there are comments), then the comments, then the "Leave a Comment" form, or the guest's log-in prompt, closing the thread after a hairline and `--space-6`. Reading comes before writing; a new comment lands just above the form.
 - **Comments and replies:** rows divided by hairlines. Replies are indented 24px under their comment with dashed dividers. A just-posted comment or reply gets a short Sun Wash tint.
@@ -280,7 +281,7 @@ Three roles that are distinct in fill as well as hue, so they can't be confused 
 - **Admin badge:** a Shiba Black pill with a Tan on Black paw and the label "Admin". It is the one dark element on the page, so admin mode is unmistakable.
 
 ### Field errors
-Required text fields reject input that is only spaces or blank lines, in the browser ("Spaces alone don't count. Write something here.") and on the server. When the question box form comes back from the server, it keeps what was typed and puts the message directly under the field in bold Deep Warning Red, with a Warning Red field border, `aria-invalid` and focus on the first problem field.
+Required text fields reject empty input and input that is only spaces or blank lines, in the browser and on the server. Either way the message sits directly under the field in bold Deep Warning Red ("Write something here first." / "Spaces alone don't count. Write something here."), with a Warning Red field border, `aria-invalid`, `aria-describedby` and focus on the first problem field; the browser's validation bubble is never shown. Typing clears the error. When the question box form comes back from the server, it keeps what was typed.
 
 ### Admin reveal
 On an anonymous comment or reply, admins see a small pill in the author line: a paw and "Posted anonymously by **name**", in the Admin badge's Shiba Black and Tan on Black, so it reads as admin-only at a glance ("only admins see this" is in the accessible name).

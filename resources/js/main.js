@@ -32,18 +32,67 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Required text fields reject spaces-only input before anything is sent;
-    // the server checks the same rule.
-    document.addEventListener('input', (e) => {
-        const field = e.target;
-        if (!field.matches('input[required][type="text"], textarea[required]')) {
+    // Required text fields reject empty and spaces-only input before
+    // anything is sent (the server checks the same rule). The message is the
+    // same styled inline error the server renders, not the browser bubble.
+    const REQUIRED = 'input[required][type="text"], textarea[required]';
+
+    function blankMessage(field) {
+        if (field.value === '') return 'Write something here first.';
+        if (field.value.trim() === '') {
+            return "Spaces alone don't count. Write something here.";
+        }
+        return '';
+    }
+
+    function setFieldError(field, message) {
+        const id = `${field.id}-error`;
+        let error = document.getElementById(id);
+        const group = field.closest('.form-group');
+        if (!message) {
+            if (error) error.remove();
+            field.removeAttribute('aria-invalid');
+            field.removeAttribute('aria-describedby');
+            if (group) group.classList.remove('has-error');
             return;
         }
-        field.setCustomValidity(
-            field.value !== '' && field.value.trim() === ''
-                ? "Spaces alone don't count. Write something here."
-                : '');
+        if (!error) {
+            error = document.createElement('p');
+            error.className = 'field-error';
+            error.id = id;
+            field.after(error);
+        }
+        error.textContent = message;
+        field.setAttribute('aria-invalid', 'true');
+        field.setAttribute('aria-describedby', id);
+        if (group) group.classList.add('has-error');
+    }
+
+    document.addEventListener('input', (e) => {
+        const field = e.target;
+        if (!field.matches(REQUIRED)) return;
+        const message = blankMessage(field);
+        field.setCustomValidity(message && field.value !== '' ? message : '');
+        // Typing clears an error that's showing; it never adds one early.
+        if (!message || field.getAttribute('aria-invalid') === 'true') {
+            setFieldError(field, message);
+        }
     });
+
+    // On submit, show the inline error instead of the bubble, and put the
+    // cursor in the first field that needs attention.
+    let focusedInvalid = false;
+    document.addEventListener('invalid', (e) => {
+        const field = e.target;
+        if (!field.matches(REQUIRED) || !field.id) return;
+        e.preventDefault();
+        setFieldError(field, blankMessage(field) || field.validationMessage);
+        if (!focusedInvalid) {
+            focusedInvalid = true;
+            field.focus();
+            queueMicrotask(() => { focusedInvalid = false; });
+        }
+    }, true);
 
     // The server names a draft to drop after it saved that form for real.
     if (document.body.dataset.clearDraft) {
@@ -288,8 +337,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const next = Math.max(0, (parseInt(countEl.textContent, 10) || 0) + delta);
         countEl.textContent = String(next);
         if (countLabelEl) {
-            countLabelEl.textContent = next === 1 ? 'comment' : 'comments';
+            countLabelEl.textContent =
+                next === 0 ? 'Comments' : next === 1 ? 'comment' : 'comments';
         }
+        if (heading) heading.classList.toggle('is-empty', next === 0);
     }
 
     function el(tag, className, text) {

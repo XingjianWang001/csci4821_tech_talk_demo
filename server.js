@@ -63,6 +63,15 @@ function takeReturnTo(req) {
 // One date format for question boxes, comments and replies: no seconds.
 // The comment and reply APIs send created_label from this too, so items
 // added in the browser show the same clock time as server-rendered ones.
+// Dates in the current year leave the year out ("Nov 27, 5:20 PM"): it is
+// noise in every meta line, and Atkinson's slashed zero made "2026" read
+// oddly. Older dates keep it.
+const dateFormatThisYear = new Intl.DateTimeFormat('en-US', {
+    month : 'short',
+    day : 'numeric',
+    hour : 'numeric',
+    minute : '2-digit'
+});
 const dateFormat = new Intl.DateTimeFormat('en-US', {
     month : 'short',
     day : 'numeric',
@@ -73,7 +82,11 @@ const dateFormat = new Intl.DateTimeFormat('en-US', {
 
 function formatDate(value) {
     const date = value instanceof Date ? value : new Date(value);
-    return Number.isNaN(date.getTime()) ? '' : dateFormat.format(date);
+    if (Number.isNaN(date.getTime())) return '';
+    const format = date.getFullYear() === new Date().getFullYear()
+                       ? dateFormatThisYear
+                       : dateFormat;
+    return format.format(date);
 }
 
 // List previews: whitespace collapsed, cut on a word boundary within the

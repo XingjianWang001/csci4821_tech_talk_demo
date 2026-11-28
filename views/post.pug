@@ -19,6 +19,9 @@ mixin authorLine(item, kind)
 block content
     - var anonymityHint = 'Hidden from other readers. Admins can still see who wrote it.'
     - var replyRule = 'Only the question box author, the commenter or an admin can reply.'
+    - var canReply = (c) => user && (user.id === post.author_id || user.id === c.user_id || user.isAdmin)
+    //- Say the reply rule once, and only to someone it actually limits.
+    - var someLocked = user && comments.some((c) => !canReply(c))
     article.post-detail
         header.post-header
             h1= post.title
@@ -46,12 +49,16 @@ block content
         //- Reading order: the conversation first, then the form to join it.
         .comments-header
             //- The thread's bold moment: the count leads, as a display numeral.
-            h2#comments-heading(tabindex="-1")
+            //- With no comments the heading steps back to a muted "Comments" so
+            //- the sleepy-Shiba empty state leads instead of a big red 0.
+            h2#comments-heading(tabindex="-1" class=comments.length === 0 ? 'is-empty' : undefined)
                 span#comment-count.comments-count= comments.length
                 = ' '
-                span#comment-count-label.comments-label= comments.length === 1 ? 'comment' : 'comments'
+                span#comment-count-label.comments-label= comments.length === 0 ? 'Comments' : comments.length === 1 ? 'comment' : 'comments'
             if user && comments.length > 0
                 a.comments-jump(href="#leave-comment") Write a comment
+        if someLocked
+            p.reply-rule= replyRule
 
 
         .comments-list
@@ -64,10 +71,8 @@ block content
                         .comment-content= comment.content
                         - var commentBy = `comment by ${comment.is_anonymous ? 'Anonymous' : comment.username}`
                         .comment-actions
-                            if user && (user.id === post.author_id || user.id === comment.user_id || user.isAdmin)
+                            if canReply(comment)
                                 button.btn.btn-small.btn-reply(type="button" data-comment-id=comment.id aria-expanded="false" aria-controls=`reply-form-${comment.id}` aria-label=`Reply to ${commentBy}`) Reply
-                            else if user
-                                p.reply-rule= replyRule
                             if user && (user.id === comment.user_id || user.isAdmin)
                                 button.btn.btn-small.btn-delete-comment(type="button" data-comment-id=comment.id aria-label=`Delete ${commentBy}`) Delete
 
