@@ -29,8 +29,24 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch {
                 // ignore
             }
+        },
+        // Every saved draft on every page (all keys start with "draft:").
+        removeAll() {
+            try {
+                Object.keys(window.sessionStorage)
+                    .filter(key => key.startsWith('draft:'))
+                    .forEach(key => window.sessionStorage.removeItem(key));
+            } catch {
+                // ignore
+            }
         }
     };
+
+    // After an explicit logout the server asks for every draft to go, so
+    // the next person at this computer never sees them. An expired session
+    // doesn't ask, so its drafts stay for the "your draft will be there"
+    // recovery. This runs before any form restores a draft.
+    if (document.body.dataset.clearAllDrafts === 'true') drafts.removeAll();
 
     // Required text fields reject empty and spaces-only input before
     // anything is sent (the server checks the same rule). The message is the
@@ -80,7 +96,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // On submit, show the inline error instead of the bubble, and put the
-    // cursor in the first field that needs attention.
+    // cursor in the first field that needs attention. The browser fires one
+    // `invalid` per field, in form order, and runs microtasks between them,
+    // so the flag is reset on the next task: only after the whole form has
+    // been checked. Otherwise every field takes focus and the last one wins.
     let focusedInvalid = false;
     document.addEventListener('invalid', (e) => {
         const field = e.target;
@@ -90,7 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!focusedInvalid) {
             focusedInvalid = true;
             field.focus();
-            queueMicrotask(() => { focusedInvalid = false; });
+            window.setTimeout(() => { focusedInvalid = false; }, 0);
         }
     }, true);
 
