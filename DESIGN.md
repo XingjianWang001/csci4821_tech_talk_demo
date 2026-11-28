@@ -283,7 +283,16 @@ Three roles that are distinct in fill as well as hue, so they can't be confused 
 - **Admin badge:** a Shiba Black pill with a Tan on Black paw and the label "Admin". It is the one dark element on the page, so admin mode is unmistakable.
 
 ### Field errors
-Required text fields reject empty input and input that is only spaces or blank lines, in the browser and on the server. Either way the message sits directly under the field in bold Deep Warning Red ("Write something here first." / "Spaces alone don't count. Write something here."), with a Warning Red field border, `aria-invalid`, `aria-describedby` and focus on the first problem field in reading order (decided once the browser has checked the whole form, not per field); the browser's validation bubble is never shown. Usernames are trimmed on register and login, and a username made only of spaces is rejected. Typing clears the error. When the question box form comes back from the server, it keeps what was typed.
+Every form (question box, comment, reply, log in, register) reports a problem with a field under that field, never as a flash. Flashes are for outcomes only (logged in, published, deleted, logged out).
+- **Look and wiring:** the message sits directly under the field (`p.field-error#<field>-error`) in bold Deep Warning Red, with a Warning Red field border, `aria-invalid` and `aria-describedby`. Focus goes to the first problem field in reading order (decided once the browser has checked the whole form, not per field). The browser's validation bubble is never shown. Typing clears the error.
+- **Server round trips:** log in, register and the question box form come back as HTTP 400 with the error markup and what was typed (the username; never a password). The first problem field carries `autofocus`, and main.js also focuses it, since browsers skip autofocus when the window wasn't focused as the page loaded. Auth fields use the `+field` mixin in `views/mixins/form.pug`.
+- **One vocabulary:** the wording lives once in `resources/js/field-messages.js`, which `server.js` requires and every page loads before main.js, so a problem reads the same whichever side caught it:
+  - Empty required field: "Write something here first."
+  - Only spaces or blank lines: "Spaces alone don't count. Write something here." Passwords only have to be non-empty, since spaces are real password characters.
+  - Confirm Password differs: "The passwords don't match. Enter the same password in both fields." (under Confirm Password)
+  - Username already registered: "That username is taken. Choose a different one." (under Username)
+  - Unknown username or wrong password: "That username and password don't match. Check them and try again." Both cases show it under Password, so the form never says which part was wrong.
+- Usernames are trimmed on register and login, and a username made only of spaces counts as spaces-only.
 
 ### Admin reveal
 On an anonymous comment or reply, admins see a small pill in the author line: a paw and "Posted anonymously by **name**", in the Admin badge's Shiba Black and Tan on Black, so it reads as admin-only at a glance ("only admins see this" is in the accessible name).
