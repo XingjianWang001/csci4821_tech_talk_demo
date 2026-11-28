@@ -80,7 +80,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // On submit, show the inline error instead of the bubble, and put the
-    // cursor in the first field that needs attention.
+    // cursor in the first field that needs attention. The browser fires one
+    // `invalid` per field, in form order, and runs microtasks between them,
+    // so the flag is reset on the next task: only after the whole form has
+    // been checked. Otherwise every field takes focus and the last one wins.
     let focusedInvalid = false;
     document.addEventListener('invalid', (e) => {
         const field = e.target;
@@ -90,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!focusedInvalid) {
             focusedInvalid = true;
             field.focus();
-            queueMicrotask(() => { focusedInvalid = false; });
+            window.setTimeout(() => { focusedInvalid = false; }, 0);
         }
     }, true);
 
