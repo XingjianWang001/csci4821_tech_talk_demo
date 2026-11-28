@@ -22,18 +22,27 @@ block content
                 p #[a(href=loginHref) Log in] or #[a(href=registerHref) register] to write the first one.
     else
         ol.post-list
-            each post in posts
+            each post, index in posts
                 - var commentCount = Number(post.comment_count) || 0
+                //- Page 1 leads with the newest question box: a larger title,
+                //- a fuller preview and the count as a display numeral. Same
+                //- h2, same whole-row link; only the treatment changes.
+                - var isLead = currentPage === 1 && index === 0
                 li
-                    article.post-card
+                    article.post-card(class=isLead ? 'post-card--lead' : undefined)
                         h2.post-title
                             a(href=`/post/${post.id}`)= post.title
                         p.post-meta
                             span.post-meta-items
                                 span.author by #{post.author_name}
                                 time.date(datetime=isoDate(post.created_at))= formatDate(post.created_at)
-                                span.comment-count(class=commentCount > 0 ? 'has-comments' : undefined)= commentCount === 0 ? 'No comments yet' : commentCount === 1 ? '1 comment' : `${commentCount} comments`
-                        p.post-preview= excerpt(post.content)
+                                if isLead && commentCount > 0
+                                    span.comment-count.has-comments
+                                        span.comments-count= commentCount
+                                        = commentCount === 1 ? ' comment' : ' comments'
+                                else
+                                    span.comment-count(class=commentCount > 0 ? 'has-comments' : undefined)= commentCount === 0 ? 'No comments yet' : commentCount === 1 ? '1 comment' : `${commentCount} comments`
+                        p.post-preview= isLead ? excerpt(post.content, 400) : excerpt(post.content)
 
     if totalPages > 1
         nav.pagination(aria-label="Question box pages")
