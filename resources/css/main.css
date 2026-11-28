@@ -90,6 +90,7 @@
   --panel-pad: clamp(20px, 4vw, 40px);
   --column: 760px;
   --column-narrow: 440px;
+  --mark-hero-compact: 48px;  /* home hero mark on a phone */
 
   --radius-badge: 3px;
   --radius-control: 6px;
@@ -362,20 +363,63 @@ button.nav-link {
   text-underline-offset: 0.35em;
 }
 
-/* Stack the header in a narrow window (phone, half-width screen share). */
+.welcome-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* A narrow window (phone, half-width screen share) keeps the header on one
+ * row: tighter links, the brand name at body size for guests, and for a
+ * signed-in visitor the Shiba mark, the username, the Admin badge, "New"
+ * and Log Out. Hidden words stay in the accessible names. */
 @container (max-width: 520px) {
   .navbar-inner {
-    flex-direction: column;
-    align-items: flex-start;
+    flex-wrap: nowrap;
+    gap: var(--space-3);
+  }
+
+  .nav-brand {
+    flex: none;
+  }
+
+  .nav-brand-name {
+    font-size: var(--text-base);
   }
 
   .nav-right {
-    margin-left: calc(-1 * var(--space-3));
+    flex-wrap: nowrap;
+    min-width: 0;
+    gap: var(--space-1);
+    margin-right: calc(-1 * var(--space-2));
+  }
+
+  .nav-link {
+    padding-inline: var(--space-2);
   }
 
   .nav-user {
-    flex-basis: 100%;
-    margin: 0 0 0 var(--space-3);
+    min-width: 0;
+    margin-right: var(--space-1);
+  }
+
+  .welcome {
+    display: flex;
+    min-width: 0;
+  }
+
+  .admin-badge {
+    flex: none;
+  }
+
+  .nav-compact-hide,
+  .navbar-inner--user .nav-brand-name {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 }
 
@@ -414,7 +458,32 @@ button.nav-link {
   padding-block: var(--space-4);
 }
 
-/* ---- flash messages: below the header, dismissible ---- */
+/* ---- flash messages: right under the header, above any hero ---- */
+.flash-region {
+  width: 100%;
+  max-width: calc(var(--column) + 2 * var(--gutter));
+  margin: 0 auto;
+  padding: var(--space-6) var(--gutter) 0;
+}
+
+/* The flash takes the page's top padding, so the page keeps its rhythm. */
+.flash-region + .page {
+  padding-top: 0;
+}
+
+/* Before the home hero the flash sits on the band, so the band stays one
+ * piece from the header down through the hero. */
+.flash-region--band {
+  max-width: none;
+  padding-top: var(--space-1);
+  background-color: var(--color-band);
+}
+
+.flash-region--band > .message {
+  max-width: var(--column);
+  margin: 0 auto var(--space-2);
+}
+
 .message {
   display: flex;
   align-items: flex-start;
@@ -481,6 +550,7 @@ button.nav-link {
  * size beside the page title. Band chrome, not a box inside the surface,
  * so the Two Surfaces Rule holds. ---- */
 .home-hero {
+  container-type: inline-size;
   background-color: var(--color-band);
 }
 
@@ -510,6 +580,26 @@ button.nav-link {
   margin-top: var(--space-2);
   max-width: var(--measure);
   color: var(--color-ink);
+}
+
+/* On a phone the hero shrinks so the first question box starts higher:
+ * a smaller mark, the lede's first sentence only, less padding. */
+@container (max-width: 520px) {
+  .home-hero-inner {
+    padding-bottom: var(--space-4);
+  }
+
+  .home-hero-mark {
+    width: var(--mark-hero-compact);
+  }
+
+  .home-hero-lede {
+    margin-top: var(--space-1);
+  }
+
+  .home-hero-lede-more {
+    display: none;
+  }
 }
 
 /* ---- home: question box list ---- */
