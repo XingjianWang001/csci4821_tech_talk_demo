@@ -29,8 +29,24 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch {
                 // ignore
             }
+        },
+        // Every saved draft on every page (all keys start with "draft:").
+        removeAll() {
+            try {
+                Object.keys(window.sessionStorage)
+                    .filter(key => key.startsWith('draft:'))
+                    .forEach(key => window.sessionStorage.removeItem(key));
+            } catch {
+                // ignore
+            }
         }
     };
+
+    // After an explicit logout the server asks for every draft to go, so
+    // the next person at this computer never sees them. An expired session
+    // doesn't ask, so its drafts stay for the "your draft will be there"
+    // recovery. This runs before any form restores a draft.
+    if (document.body.dataset.clearAllDrafts === 'true') drafts.removeAll();
 
     // Required text fields reject empty and spaces-only input before
     // anything is sent (the server checks the same rule). The message is the
