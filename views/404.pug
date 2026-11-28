@@ -1,0 +1,12 @@
+extends layout
+
+block vars
+    - var pageWidth = 'narrow'
+
+block content
+    .error-container
+        +shibaMark({mood: 'lost', size: 120, className: 'error-mark'})
+        p.error-code(aria-hidden="true") 404
+        h1 Page Not Found
+        p The shiba sniffed everywhere but couldn't find this page. It may have been moved or deleted.
+        a.btn.btn-primary(href="/") Go Back Home

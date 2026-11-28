@@ -1,0 +1,53 @@
+//- The Shiba mark: an original, geometric red Shiba head.
+//- Colors come from CSS classes (.shiba-*) so the palette tokens apply.
+//- mood: 'happy' (brand), 'lost' (404) or 'sleepy' (empty list).
+//- Decorative by default (aria-hidden); pass a label to make it an image.
+mixin shibaMark(opts)
+    - var o = opts || {}
+    - var mood = o.mood || 'happy'
+    - var size = o.size || 32
+    svg.shiba-mark(class=[`shiba-mark--${mood}`, o.className] viewBox="0 0 64 64" width=size height=size xmlns="http://www.w3.org/2000/svg" aria-hidden=o.label ? undefined : 'true' role=o.label ? 'img' : undefined aria-label=o.label focusable="false")
+        g.shiba-head
+            //- ears
+            path.shiba-coat(d="M9 33 L14 6 L30 20 Z")
+            path.shiba-coat(d="M55 33 L50 6 L34 20 Z")
+            path.shiba-inner-ear(d="M14.5 26 L16.5 13 L25 21 Z")
+            path.shiba-inner-ear(d="M49.5 26 L47.5 13 L39 21 Z")
+            //- head
+            path.shiba-coat(d="M32 16 C47 16 56 26 56 38 C56 50 46 58 32 58 C18 58 8 50 8 38 C8 26 17 16 32 16 Z")
+            //- urajiro: the cream mask on the cheeks and muzzle
+            path.shiba-cream(d="M11 41 C15 33 24 34 32 39 C40 34 49 33 53 41 C51 52 43 57 32 57 C21 57 13 52 11 41 Z")
+            //- maro eyebrow dots
+            circle.shiba-cream(cx="22.5" cy="27" r="2.6")
+            circle.shiba-cream(cx="41.5" cy="27" r="2.6")
+            //- eyes
+            if mood === 'sleepy'
+                path.shiba-line(d="M19.5 34 Q23 37 26.5 34")
+                path.shiba-line(d="M37.5 34 Q41 37 44.5 34")
+            else if mood === 'lost'
+                circle.shiba-ink(cx="23.5" cy="33" r="2.6")
+                circle.shiba-ink(cx="42.5" cy="33" r="2.6")
+                circle.shiba-cream(cx="24.3" cy="32.1" r="0.9")
+                circle.shiba-cream(cx="43.3" cy="32.1" r="0.9")
+            else
+                path.shiba-line(d="M19.5 35 Q23 31.5 26.5 35")
+                path.shiba-line(d="M37.5 35 Q41 31.5 44.5 35")
+            //- nose and mouth
+            path.shiba-ink(d="M28.5 42 H35.5 Q35.5 46 32 46.5 Q28.5 46 28.5 42 Z")
+            if mood === 'lost'
+                path.shiba-line(d="M29 51.5 Q32 49.5 35 51.5")
+            else
+                path.shiba-line(d="M32 46.5 V48.5 M27.5 48 Q29.5 51 32 48.5 Q34.5 51 36.5 48")
+        if mood === 'sleepy'
+            text.shiba-zzz(x="52" y="12") z
+        if mood === 'lost'
+            text.shiba-zzz(x="53" y="13") ?
+
+//- A small paw, used on the admin badge and in posted acknowledgements.
+mixin paw(className)
+    svg.paw(class=className viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false")
+        ellipse(cx="12" cy="16" rx="5.5" ry="4.5")
+        circle(cx="5.5" cy="10" r="2.3")
+        circle(cx="9.5" cy="5.8" r="2.3")
+        circle(cx="14.5" cy="5.8" r="2.3")
+        circle(cx="18.5" cy="10" r="2.3")

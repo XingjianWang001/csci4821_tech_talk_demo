@@ -1,0 +1,1359 @@
+/* Question Box Blog: the Shiba design system.
+ * Primitives are named after the Shiba Inu coat; rules only use the
+ * semantic roles below. Change the palette, type or spacing here, nowhere
+ * else. DESIGN.md explains every role.
+ */
+:root {
+  /* ---- color primitives ---- */
+  --shiba-cream: #fffdea;     /* urajiro, the pale undercoat */
+  --shiba-paper: #fffefa;     /* the one content surface */
+  --shiba-yellow: #f5eeae;    /* sesame-light fur, the chrome band */
+  --shiba-yellow-deep: #ece2a0;
+  --shiba-red-tan: #a3461a;   /* the red coat, the one strong accent */
+  --shiba-red-tan-deep: #8a3712;
+  --shiba-tan-light: #eba873; /* red-tan as it reads on the black coat */
+  --shiba-black: #2b2118;     /* black-and-tan ink */
+  --shiba-bark: #6b5a45;      /* muted ink */
+  --shiba-whisker: #8c7a5e;   /* control outlines */
+  --shiba-hairline: #ebe1bd;  /* dividers */
+  --warn-red: #b3261e;
+  --warn-red-deep: #8c1d17;
+  --leaf-green: #2f5d1e;
+  --leaf-wash: #eef2d8;
+  --warn-wash: #fbe6dd;
+  --sun-wash: #fbf3cc;
+
+  /* ---- color roles ---- */
+  --color-page: var(--shiba-cream);
+  --color-surface: var(--shiba-paper);
+  --color-band: var(--shiba-yellow);
+  --color-ink: var(--shiba-black);
+  --color-ink-muted: var(--shiba-bark);
+  --color-accent: var(--shiba-red-tan);
+  --color-accent-hover: var(--shiba-red-tan-deep);
+  --color-accent-on-dark: var(--shiba-tan-light);
+  --color-on-accent: var(--shiba-cream);
+  --color-secondary: var(--shiba-yellow);
+  --color-secondary-hover: var(--shiba-yellow-deep);
+  --color-border: var(--shiba-hairline);
+  --color-border-strong: var(--shiba-whisker);
+  --color-destructive: var(--warn-red);
+  --color-destructive-hover: var(--warn-red-deep);
+  --color-on-destructive: var(--shiba-paper);
+  --color-success: var(--leaf-green);
+  --color-success-bg: var(--leaf-wash);
+  --color-error-bg: var(--warn-wash);
+  --color-info-bg: var(--sun-wash);
+  --color-focus: var(--shiba-red-tan-deep);
+  --color-scrim: rgb(43 33 24 / 0.45); /* Shiba Black behind a dialog */
+  --color-highlight: var(--sun-wash);  /* a just-posted comment, briefly */
+
+  /* ---- type ----
+   * Young Serif: a chunky, friendly display serif for headings and the
+   * brand. Atkinson Hyperlegible Next: a warm, very legible sans for long
+   * reading and small meta text. Scale ratio is about 1.25.
+   */
+  --font-display: "Young Serif", Georgia, "Times New Roman", serif;
+  --font-body: "Atkinson Hyperlegible Next", "Segoe UI", system-ui, sans-serif;
+
+  --text-xs: 0.8125rem;                                   /* 13px badges, hints */
+  --text-sm: 0.9375rem;                                   /* 15px meta, comments */
+  --text-base: 1.0625rem;                                 /* 17px body */
+  --text-md: 1.25rem;                                     /* 20px h3, brand */
+  --text-lg: clamp(1.375rem, 1.2rem + 0.8vw, 1.625rem);   /* list titles, h2 */
+  --text-xl: clamp(1.875rem, 1.45rem + 1.9vw, 2.625rem);  /* page h1 */
+  --text-display: clamp(4.5rem, 3.4rem + 5vw, 7rem);      /* 404 numeral */
+
+  --leading-tight: 1.15;
+  --leading-snug: 1.35;
+  --leading-body: 1.6;
+  --leading-reading: 1.75;
+
+  --weight-regular: 400;
+  --weight-bold: 700;
+
+  /* Reading width for bodies, comments, previews and intro lines. `ch` is
+   * the width of a "0", wider than Atkinson's average letter, so 56ch
+   * holds about 73 characters: inside the 45-75 range. */
+  --measure: 56ch;
+
+  /* ---- space and layout ---- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --gutter: clamp(16px, 4vw, 32px);
+  --panel-pad: clamp(20px, 4vw, 40px);
+  --column: 760px;
+  --column-narrow: 440px;
+
+  --radius-badge: 3px;
+  --radius-control: 6px;
+  --radius-panel: 12px;
+  --radius-pill: 999px;
+
+  /* ---- motion ---- */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-quick: 160ms;
+  --duration-gentle: 420ms;
+  --duration-tap: 600ms;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+/* main.js toggles the reply form and Reply button with `hidden`; keep it
+ * winning over component display rules such as .btn's inline-flex. */
+[hidden] {
+  display: none !important;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--leading-body);
+  background-color: var(--color-page);
+  color: var(--color-ink);
+  caret-color: var(--color-accent);
+  accent-color: var(--color-accent);
+}
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-tight);
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+
+h1 {
+  font-size: var(--text-xl);
+  color: var(--color-accent);
+}
+
+h2 {
+  font-size: var(--text-lg);
+}
+
+h3 {
+  font-size: var(--text-md);
+}
+
+p {
+  text-wrap: pretty;
+}
+
+::selection {
+  background-color: var(--color-band);
+  color: var(--color-ink);
+}
+
+a {
+  color: var(--color-accent);
+  text-underline-offset: 0.2em;
+}
+
+a:hover {
+  color: var(--color-accent-hover);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+/* Keyboard users can jump past the header; visible only when focused. */
+.skip-link {
+  position: absolute;
+  top: var(--space-2);
+  left: var(--space-2);
+  z-index: 10;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-control);
+  background-color: var(--color-ink);
+  color: var(--color-on-accent);
+  font-weight: var(--weight-bold);
+  transform: translateY(-200%);
+}
+
+.skip-link:focus {
+  transform: none;
+}
+
+.skip-link:hover {
+  color: var(--color-on-accent);
+}
+
+main:focus {
+  outline: none;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ---- Shiba mark (views/mixins/shiba.pug) ---- */
+.shiba-mark {
+  display: block;
+  flex: none;
+  overflow: visible;
+}
+
+.shiba-coat {
+  fill: var(--color-accent);
+}
+
+.shiba-inner-ear {
+  fill: var(--color-accent-on-dark);
+}
+
+.shiba-cream {
+  fill: var(--color-page);
+}
+
+.shiba-ink {
+  fill: var(--color-ink);
+}
+
+.shiba-line {
+  fill: none;
+  stroke: var(--color-ink);
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.shiba-zzz {
+  font-family: var(--font-display);
+  font-size: 14px; /* SVG user units: scales with the mark, not the page */
+  fill: var(--color-ink-muted);
+}
+
+.shiba-head {
+  transform-box: fill-box;
+  transform-origin: 50% 90%;
+}
+
+.paw {
+  flex: none;
+  fill: currentColor;
+}
+
+/* ---- header ---- */
+.navbar {
+  container-type: inline-size;
+  background-color: var(--color-band);
+}
+
+.navbar-inner,
+.footer-inner {
+  max-width: calc(var(--column) + 2 * var(--gutter));
+  margin: 0 auto;
+  padding-inline: var(--gutter);
+}
+
+.navbar-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+  padding-block: var(--space-3);
+}
+
+.nav-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  line-height: var(--leading-tight);
+  color: var(--color-accent);
+  text-decoration: none;
+  border-radius: var(--radius-control);
+}
+
+.nav-brand:hover {
+  color: var(--color-accent-hover);
+}
+
+.nav-right {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+}
+
+.nav-user {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-right: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--color-ink-muted);
+}
+
+.admin-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-pill);
+  background-color: var(--color-ink);
+  color: var(--color-accent-on-dark);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.02em;
+}
+
+.nav-link {
+  display: inline-block;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-control);
+  color: var(--color-ink);
+  font-size: var(--text-sm);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.nav-link:hover {
+  color: var(--color-ink);
+  background-color: var(--color-secondary-hover);
+}
+
+.nav-link[aria-current="page"] {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-decoration-color: var(--color-accent);
+  text-underline-offset: 0.35em;
+}
+
+/* Stack the header in a narrow window (phone, half-width screen share). */
+@container (max-width: 520px) {
+  .navbar-inner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .nav-right {
+    margin-left: calc(-1 * var(--space-3));
+  }
+
+  .nav-user {
+    flex-basis: 100%;
+    margin: 0 0 0 var(--space-3);
+  }
+}
+
+/* ---- page shell: one column, footer at the bottom ---- */
+.page {
+  flex: 1;
+  width: 100%;
+  max-width: calc(var(--column) + 2 * var(--gutter));
+  margin: 0 auto;
+  padding: var(--space-6) var(--gutter) var(--space-7);
+}
+
+.content {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-panel);
+  padding: var(--panel-pad);
+}
+
+.content--narrow {
+  max-width: var(--column-narrow);
+  margin-inline: auto;
+}
+
+.footer {
+  background-color: var(--color-band);
+  color: var(--color-ink-muted);
+  font-size: var(--text-sm);
+}
+
+.footer-inner {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-4);
+  padding-block: var(--space-4);
+}
+
+/* ---- flash messages: below the header, dismissible ---- */
+.message {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-control);
+  background-color: var(--color-info-bg);
+  color: var(--color-ink);
+  font-weight: var(--weight-bold);
+}
+
+/* On login, register and 404 the flash matches the narrow card below it. */
+.message--narrow {
+  max-width: var(--column-narrow);
+  margin-inline: auto;
+}
+
+.message-paw {
+  width: 1.15em;
+  height: 1.15em;
+  margin-top: var(--space-1);
+}
+
+.message-text {
+  flex: 1;
+  padding-block: 2px;
+}
+
+.message.success {
+  background-color: var(--color-success-bg);
+  border-color: var(--color-success);
+  color: var(--color-success);
+}
+
+.message.error {
+  background-color: var(--color-error-bg);
+  border-color: var(--color-destructive);
+  color: var(--color-destructive-hover);
+}
+
+.message-dismiss {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: var(--text-md);
+  line-height: 1;
+  cursor: pointer;
+}
+
+.message-dismiss:hover {
+  background-color: var(--color-surface);
+}
+
+/* ---- home hero: the header band carries on, with the Shiba at full
+ * size beside the page title. Band chrome, not a box inside the surface,
+ * so the Two Surfaces Rule holds. ---- */
+.home-hero {
+  background-color: var(--color-band);
+}
+
+.home-hero-inner {
+  display: flex;
+  align-items: center;
+  gap: clamp(var(--space-3), 3vw, var(--space-5));
+  max-width: calc(var(--column) + 2 * var(--gutter));
+  margin: 0 auto;
+  padding: var(--space-2) var(--gutter) clamp(var(--space-5), 5vw, var(--space-7));
+}
+
+.home-hero-mark {
+  width: clamp(64px, 14vw, 120px);
+  height: auto;
+}
+
+.home-hero-text {
+  min-width: 0;
+}
+
+.home-hero h1 {
+  color: var(--color-accent);
+}
+
+.home-hero-lede {
+  margin-top: var(--space-2);
+  max-width: var(--measure);
+  color: var(--color-ink);
+}
+
+/* ---- home: question box list ---- */
+
+.post-list {
+  list-style: none;
+}
+
+/* The heading now lives in the hero, so the first row starts the card. */
+.post-list > li:first-child .post-card {
+  padding-top: 0;
+}
+
+.post-list > li + li {
+  border-top: 1px solid var(--color-border);
+}
+
+/* The whole item is one link: the title's ::after covers the card.
+ * Hierarchy: serif title in ink (red-tan only on hover/focus, so the accent
+ * keeps meaning "act here"), then a muted meta line where activity stands
+ * out, then a smaller preview. */
+.post-card {
+  position: relative;
+  padding-block: var(--space-4);
+  border-radius: var(--radius-control);
+}
+
+.post-title {
+  margin-bottom: var(--space-1);
+}
+
+.post-title a {
+  color: var(--color-ink);
+  text-decoration: none;
+}
+
+.post-title a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+.post-card:hover .post-title a,
+.post-title a:focus-visible {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+}
+
+.post-title a:focus-visible {
+  outline: none;
+}
+
+.post-card:has(.post-title a:focus-visible) {
+  outline: 2px solid var(--color-focus);
+  outline-offset: var(--space-1);
+}
+
+.post-meta {
+  overflow: hidden;
+  font-size: var(--text-sm);
+  color: var(--color-ink-muted);
+}
+
+/* Every item carries a leading dot; the dots that start a line sit in the
+ * negative margin and are clipped, so a wrapped line never opens with "·". */
+.post-meta-items {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  margin-left: -1.5em;
+}
+
+.post-meta-items > *::before {
+  content: "·";
+  display: inline-block;
+  width: 1.5em;
+  text-align: center;
+}
+
+/* Question boxes with a conversation stand out from quiet ones. */
+.comment-count.has-comments {
+  color: var(--color-ink);
+  font-weight: var(--weight-bold);
+}
+
+.post-preview {
+  margin-top: var(--space-2);
+  max-width: var(--measure);
+  font-size: var(--text-sm);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+/* empty list and 404: a Shiba moment, then the way forward */
+.empty-state,
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  text-align: center;
+}
+
+.empty-state {
+  margin-top: var(--space-5);
+  padding-block: var(--space-5);
+}
+
+.empty-state-title {
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  line-height: var(--leading-snug);
+  max-width: 28ch;
+}
+
+.error-code {
+  font-family: var(--font-display);
+  font-size: var(--text-display);
+  line-height: 1;
+  color: var(--color-accent);
+  margin-top: calc(-1 * var(--space-3));
+}
+
+.error-container h1 {
+  color: var(--color-ink);
+}
+
+.error-container .btn {
+  margin-top: var(--space-2);
+}
+
+/* pagination */
+.pagination {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-3) var(--space-5);
+  margin-top: var(--space-6);
+}
+
+.page-btn {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-control);
+  background-color: var(--color-secondary);
+  color: var(--color-ink);
+  text-decoration: none;
+}
+
+.page-btn:hover {
+  color: var(--color-ink);
+  background-color: var(--color-secondary-hover);
+}
+
+.page-btn:active {
+  transform: translateY(1px);
+}
+
+.page-info {
+  color: var(--color-ink-muted);
+  font-size: var(--text-sm);
+}
+
+/* ---- question box page ---- */
+.post-header {
+  padding-bottom: var(--space-5);
+  margin-bottom: var(--space-5);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.post-header h1 {
+  margin-bottom: var(--space-3);
+}
+
+.updated {
+  font-style: italic;
+}
+
+.post-header-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-4);
+}
+
+.post-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  /* Text buttons: pull out by their padding so the words align with the
+   * column edges, whether the row sits right of the meta or wraps below. */
+  margin-inline: calc(-1 * var(--space-3));
+}
+
+.inline-form {
+  display: contents;
+}
+
+.post-content {
+  max-width: var(--measure);
+  font-size: var(--text-base);
+  line-height: var(--leading-reading);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  text-wrap: pretty;
+}
+
+/* ---- comments ---- */
+.comments-section {
+  margin-top: var(--space-7);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--color-border);
+}
+
+/* Heading row: the count, and a jump to the form at the end of the thread. */
+/* The count leads the thread as a display numeral. */
+#comments-heading {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.comments-count {
+  font-size: var(--text-xl);
+  line-height: 1;
+  color: var(--color-accent);
+}
+
+/* No comments yet: a muted "Comments" heading, and the empty state leads. */
+#comments-heading.is-empty .comments-count {
+  display: none;
+}
+
+#comments-heading.is-empty .comments-label {
+  color: var(--color-ink-muted);
+}
+
+.comments-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+  margin-bottom: var(--space-2);
+}
+
+.comments-jump {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+}
+
+#comments-heading:focus {
+  outline: none;
+}
+
+#comments-heading:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+/* Joining in comes after reading: the form (or the guest's log-in prompt)
+ * closes the thread, set apart by space and a hairline. */
+.comment-form,
+.login-prompt {
+  margin-top: var(--space-6);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--color-border);
+}
+
+#leave-comment {
+  scroll-margin-top: var(--space-6);
+}
+
+/* While a reply form is open, Add Reply is the only filled button on the
+ * page; Add Comment steps down to the secondary look until it closes. */
+.comments-section.is-replying #comment-form .btn-primary {
+  background-color: var(--color-secondary);
+  border-color: var(--color-border-strong);
+  color: var(--color-ink);
+}
+
+.comments-section.is-replying #comment-form .btn-primary:hover {
+  background-color: var(--color-secondary-hover);
+  color: var(--color-ink);
+}
+
+#leave-comment:focus {
+  outline: none;
+}
+
+.comment-form h3 {
+  margin-bottom: var(--space-3);
+}
+
+.login-prompt {
+  color: var(--color-ink-muted);
+}
+
+.login-prompt a {
+  font-weight: var(--weight-bold);
+}
+
+.comments-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.comment {
+  padding-block: var(--space-4);
+  border-top: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+}
+
+/* Comment and reply headers wrap on narrow widths; the admin reveal gets
+ * its own line instead of floating mid-row. */
+.author-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 var(--space-3);
+  margin-bottom: var(--space-1);
+  font-size: var(--text-sm);
+}
+
+.author-name {
+  font-weight: var(--weight-bold);
+  overflow-wrap: anywhere;
+}
+
+.comment-date,
+.reply-date {
+  color: var(--color-ink-muted);
+}
+
+/* The admin's anonymous-author reveal: a small pill in the author line,
+ * in the Admin badge's dark-and-tan, so it reads as admin-only at a glance. */
+.real-user {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  max-width: 100%;
+  padding-inline: var(--space-2);
+  border-radius: var(--radius-pill);
+  background-color: var(--color-ink);
+  color: var(--color-accent-on-dark);
+  font-size: var(--text-xs);
+  overflow-wrap: anywhere;
+}
+
+.real-user strong {
+  color: var(--color-on-accent);
+}
+
+.comment-content,
+.reply-content {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-width: var(--measure);
+}
+
+.comment-content {
+  line-height: var(--leading-body);
+}
+
+.reply-content {
+  font-size: var(--text-sm);
+  line-height: var(--leading-body);
+}
+
+.comment-actions,
+.reply-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+/* Thread actions are quiet text buttons, so a comment outweighs its
+ * actions. The first one lines up with the text above it, and each keeps a
+ * 40px hit area even though nothing is drawn around it at rest. */
+.comment-actions > .btn:first-child,
+.reply-actions > .btn:first-child {
+  margin-left: calc(-1 * var(--space-3));
+}
+
+.comment-actions .btn,
+.reply-actions .btn {
+  min-height: 40px;
+}
+
+.btn.btn-reply,
+.post-actions .btn-edit {
+  /* Ink, not red-tan: in the thread, ink means "act" and Warning Red means
+   * "delete", so the two can't blur together under video compression. */
+  background-color: transparent;
+  border-color: transparent;
+  color: var(--color-ink);
+}
+
+.btn.btn-reply:hover,
+.btn.btn-reply:focus-visible,
+.post-actions .btn-edit:hover,
+.post-actions .btn-edit:focus-visible {
+  background-color: var(--color-secondary);
+  border-color: var(--color-border-strong);
+  color: var(--color-ink);
+}
+
+/* While its form is open, Reply keeps its label and shows as pressed. Its
+ * width never changes, so Delete never moves under the pointer. */
+.btn.btn-reply[aria-expanded="true"],
+.btn.btn-reply[aria-expanded="true"]:hover {
+  background-color: var(--color-secondary);
+  border-color: var(--color-border-strong);
+  color: var(--color-ink);
+}
+
+.comment-actions:empty {
+  display: none;
+}
+
+/* Said once under the heading, and only to someone it limits. */
+.comments-section > .reply-rule {
+  margin-bottom: var(--space-2);
+}
+
+.reply-rule {
+  color: var(--color-ink-muted);
+  font-size: var(--text-xs);
+}
+
+.reply-form-container {
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px dashed var(--color-border);
+}
+
+.replies-list {
+  display: flex;
+  flex-direction: column;
+  margin-top: var(--space-3);
+  padding-left: var(--space-5);
+}
+
+.reply {
+  padding-block: var(--space-3) 0;
+  border-top: 1px dashed var(--color-border);
+}
+
+.reply + .reply {
+  margin-top: var(--space-2);
+}
+
+/* main.js focuses the nearest comment or reply after a delete. Show the
+ * ring only for keyboard users, like every other focus target. */
+.comment:focus,
+.reply:focus {
+  outline: none;
+}
+
+.comment:focus-visible,
+.reply:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: var(--space-1);
+}
+
+/* A deleted comment keeps only its "Comment deleted." line for a moment. */
+.comment.is-removed {
+  padding-block: var(--space-3);
+}
+
+.comment.is-removed .comment-status {
+  margin: 0;
+  color: var(--color-ink-muted);
+}
+
+/* An empty thread: the sleepy Shiba and an invitation, left-aligned with
+ * everything else. */
+.no-comments {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding-block: var(--space-4);
+}
+
+.no-comments p {
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  line-height: var(--leading-snug);
+  color: var(--color-ink-muted);
+}
+
+/* ---- forms ---- */
+.form-intro {
+  margin-top: var(--space-2);
+  color: var(--color-ink-muted);
+  max-width: var(--measure);
+}
+
+.auth-form,
+.post-form {
+  margin-top: var(--space-5);
+}
+
+.form-group {
+  margin-bottom: var(--space-5);
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: var(--space-1);
+  font-weight: var(--weight-bold);
+}
+
+.form-group input,
+.form-group textarea,
+#comment-content,
+.reply-input {
+  display: block;
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-control);
+  background-color: var(--color-surface);
+  color: var(--color-ink);
+  font: inherit;
+  line-height: var(--leading-body);
+}
+
+.form-group textarea {
+  resize: vertical;
+}
+
+#comment-content {
+  min-height: 112px;
+  resize: vertical;
+}
+
+.reply-input {
+  min-height: 88px;
+  font-size: var(--text-sm);
+  resize: vertical;
+}
+
+::placeholder {
+  color: var(--color-ink-muted);
+  opacity: 1;
+}
+
+.form-group input:hover,
+.form-group textarea:hover,
+#comment-content:hover,
+.reply-input:hover {
+  border-color: var(--color-ink-muted);
+}
+
+.form-group input:focus-visible,
+.form-group textarea:focus-visible,
+#comment-content:focus-visible,
+.reply-input:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 0;
+  border-color: var(--color-accent);
+}
+
+.form-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.form-buttons,
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.anon-field {
+  display: flex;
+  flex-direction: column;
+  font-size: var(--text-sm);
+}
+
+.anon-field label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  cursor: pointer;
+}
+
+.anon-field input {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+.field-hint {
+  margin-top: 2px;
+  color: var(--color-ink-muted);
+  font-size: var(--text-xs);
+}
+
+/* A field the server sent back: the message sits right under it. */
+.field-error {
+  margin-top: var(--space-1);
+  color: var(--color-destructive-hover);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+}
+
+.form-group.has-error input,
+.form-group.has-error textarea {
+  border-color: var(--color-destructive);
+}
+
+.auth-footer {
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+  text-align: center;
+  font-size: var(--text-sm);
+}
+
+.auth-footer a {
+  font-weight: var(--weight-bold);
+}
+
+.auth-form .btn-primary {
+  width: 100%;
+}
+
+/* ---- buttons ----
+ * primary: filled red-tan, one per view.
+ * secondary (Edit, Reply, Cancel): quiet yellow, the default .btn look.
+ * destructive: red outline on the question box; on comments and replies a
+ * quiet red text button that only gains its outline on hover or focus.
+ * Links and buttons share one box model so they line up.
+ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: var(--space-2) var(--space-5);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-control);
+  background-color: var(--color-secondary);
+  color: var(--color-ink);
+  font: inherit;
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-snug);
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+.btn:hover {
+  background-color: var(--color-secondary-hover);
+  color: var(--color-ink);
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn:disabled,
+.btn[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.6;
+  transform: none;
+}
+
+.btn-primary {
+  background-color: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-on-accent);
+}
+
+.btn-primary:hover {
+  background-color: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
+  color: var(--color-on-accent);
+}
+
+.btn-delete {
+  background-color: var(--color-surface);
+  border-color: var(--color-destructive);
+  color: var(--color-destructive);
+}
+
+.btn-delete:hover {
+  background-color: var(--color-destructive);
+  border-color: var(--color-destructive);
+  color: var(--color-on-destructive);
+}
+
+.btn-delete-comment,
+.btn-delete-reply,
+.post-actions .btn-delete {
+  background-color: transparent;
+  border-color: transparent;
+  color: var(--color-destructive);
+  font-weight: var(--weight-regular);
+}
+
+.btn-delete-comment:hover,
+.btn-delete-reply:hover,
+.btn-delete-comment:focus-visible,
+.btn-delete-reply:focus-visible,
+.post-actions .btn-delete:hover,
+.post-actions .btn-delete:focus-visible {
+  background-color: var(--color-surface);
+  border-color: var(--color-destructive);
+  color: var(--color-destructive-hover);
+}
+
+.btn-small {
+  min-height: 40px;
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-sm);
+}
+
+/* ---- inline status (comments, replies, deletes) ---- */
+.form-status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+}
+
+.form-status:empty {
+  margin: 0;
+}
+
+.form-status[data-type="success"] {
+  color: var(--color-success);
+}
+
+.form-status[data-type="error"] {
+  color: var(--color-destructive-hover);
+}
+
+.form-status a {
+  color: inherit;
+}
+
+/* ---- confirmation dialog: a paper surface over a dimmed page ---- */
+#confirm-dialog {
+  margin: auto;
+  max-width: min(420px, calc(100vw - 32px));
+  padding: var(--space-5);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-panel);
+  background-color: var(--color-surface);
+  color: var(--color-ink);
+}
+
+#confirm-dialog::backdrop {
+  background-color: var(--color-scrim);
+}
+
+#confirm-dialog h2 {
+  margin-bottom: var(--space-2);
+  font-size: var(--text-md);
+}
+
+#confirm-dialog p {
+  margin-bottom: var(--space-5);
+}
+
+.dialog-actions {
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+/* ---- motion: transforms and opacity only, and only when welcome ---- */
+@media (prefers-reduced-motion: no-preference) {
+  .btn,
+  .page-btn,
+  .nav-link,
+  .post-title a {
+    transition: transform var(--duration-quick) var(--ease-out);
+  }
+
+  .nav-brand .shiba-head {
+    transition: transform var(--duration-gentle) var(--ease-out);
+  }
+
+  .nav-brand:hover .shiba-head {
+    transform: rotate(-8deg);
+  }
+
+  .message,
+  .form-status[data-type="success"] {
+    animation: rise-in var(--duration-gentle) var(--ease-out);
+  }
+
+  .comment.is-new,
+  .reply.is-new {
+    animation: rise-in var(--duration-gentle) var(--ease-out);
+  }
+
+  .form-status[data-type="success"] .paw {
+    animation: paw-tap var(--duration-tap) var(--ease-out);
+  }
+
+  .error-mark {
+    animation: head-tilt var(--duration-tap) var(--ease-out) 300ms 1 both;
+  }
+}
+
+/* Without motion the new item still gets a static, short-lived tint. */
+.comment.is-new,
+.reply.is-new {
+  background-color: var(--color-highlight);
+}
+
+.error-mark {
+  transform-origin: 50% 85%;
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes paw-tap {
+  0%   { transform: scale(0.4) rotate(-20deg); opacity: 0; }
+  60%  { transform: scale(1.15) rotate(6deg); opacity: 1; }
+  100% { transform: none; }
+}
+
+@keyframes head-tilt {
+  0%, 100% { transform: rotate(0); }
+  30%      { transform: rotate(-12deg); }
+  60%      { transform: rotate(8deg); }
+}

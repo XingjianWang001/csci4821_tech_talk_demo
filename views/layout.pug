@@ -1,0 +1,58 @@
+include mixins/shiba
+
+doctype html
+html(lang="en")
+    head
+        meta(charset="UTF-8")
+        meta(name="viewport" content="width=device-width, initial-scale=1.0")
+        title= title
+        link(rel="icon" href="/images/shiba-mark.svg" type="image/svg+xml")
+        link(rel="preconnect" href="https://fonts.googleapis.com")
+        link(rel="preconnect" href="https://fonts.gstatic.com" crossorigin)
+        link(rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:ital,wght@0,400;0,700;1,400&family=Young+Serif&display=swap")
+        link(rel="stylesheet" href="/css/main.css")
+    //- Pages set view variables (for example pageWidth) in this block.
+    block vars
+    body(data-clear-draft=clearDraft)
+        - var current = (href) => currentPath === href ? 'page' : undefined
+        a.skip-link(href="#main") Skip to content
+        header.navbar
+            nav.navbar-inner(aria-label="Main")
+                a.nav-brand(href="/" aria-current=current('/'))
+                    +shibaMark({size: 36})
+                    span.nav-brand-name Question Box Blog
+                .nav-right
+                    if user
+                        span.nav-user
+                            span.welcome Welcome, #{user.username}!
+                            if user.isAdmin
+                                span.admin-badge
+                                    +paw()
+                                    | Admin
+                        a.nav-link(href="/post/new" aria-current=current('/post/new')) New Question Box
+                        a.nav-link(href="/logout") Log Out
+                    else
+                        a.nav-link(href=loginHref aria-current=current('/login')) Log In
+                        a.nav-link(href=registerHref aria-current=current('/register')) Register
+
+        //- An optional hero that continues the header band (home only).
+        block hero
+
+        main.page#main(tabindex="-1")
+            if message
+                .message(class=[messageType, pageWidth === 'narrow' ? 'message--narrow' : null] role=messageType === 'error' ? 'alert' : 'status')
+                    if messageType === 'success'
+                        +paw('message-paw')
+                    p.message-text= message
+                    button.message-dismiss(type="button" aria-label="Dismiss message")
+                        span(aria-hidden="true") ×
+            .content(class=pageWidth === 'narrow' ? 'content--narrow' : undefined)
+                block content
+
+        footer.footer
+            .footer-inner
+                p &copy; #{new Date().getFullYear()} Question Box Blog · CSCI4131 Final Project
+                p Made with love by Shiba
+
+        script(src="/js/main.js")
+        block scripts

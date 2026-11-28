@@ -1,0 +1,44 @@
+extends layout
+
+block hero
+    //- The home page's one bold moment: the header band carries on into a
+    //- hero with the Shiba mark at full size. Chrome, not a box in the surface.
+    section.home-hero(aria-labelledby="home-title")
+        .home-hero-inner
+            +shibaMark({size: 120, className: 'home-hero-mark'})
+            .home-hero-text
+                h1#home-title Question Boxes
+                p.home-hero-lede Blog posts that start a conversation. Someone writes one, and readers answer in the comments.
+
+block content
+
+    if posts.length === 0
+        .empty-state
+            +shibaMark({mood: 'sleepy', size: 96})
+            p.empty-state-title No question boxes yet. The shiba is napping until someone writes one.
+            if user
+                a.btn.btn-primary(href="/post/new") Write the First One
+            else
+                p #[a(href=loginHref) Log in] or #[a(href=registerHref) register] to write the first one.
+    else
+        ol.post-list
+            each post in posts
+                - var commentCount = Number(post.comment_count) || 0
+                li
+                    article.post-card
+                        h2.post-title
+                            a(href=`/post/${post.id}`)= post.title
+                        p.post-meta
+                            span.post-meta-items
+                                span.author by #{post.author_name}
+                                time.date(datetime=isoDate(post.created_at))= formatDate(post.created_at)
+                                span.comment-count(class=commentCount > 0 ? 'has-comments' : undefined)= commentCount === 0 ? 'No comments yet' : commentCount === 1 ? '1 comment' : `${commentCount} comments`
+                        p.post-preview= excerpt(post.content)
+
+    if totalPages > 1
+        nav.pagination(aria-label="Question box pages")
+            if currentPage > 1
+                a.page-btn(href=`/?page=${currentPage - 1}` rel="prev") ← Newer
+            span.page-info Page #{currentPage} of #{totalPages}
+            if currentPage < totalPages
+                a.page-btn(href=`/?page=${currentPage + 1}` rel="next") Older →

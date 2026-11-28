@@ -1,0 +1,136 @@
+extends layout
+
+mixin noComments()
+    .no-comments
+        +shibaMark({mood: 'sleepy', size: 56})
+        p No comments yet. Start the conversation.
+
+mixin authorLine(item, kind)
+    .author-line(class=`${kind}-header`)
+        strong.author-name= item.is_anonymous ? 'Anonymous' : item.username
+        time(class=`${kind}-date` datetime=isoDate(item.created_at))= formatDate(item.created_at)
+        //- The admin's reveal: a small dark pill in the author line, in the
+        //- same dark-and-tan as the Admin badge, so it reads as admin-only.
+        if item.is_anonymous && user && user.isAdmin
+            span.real-user
+                +paw()
+                span Posted anonymously by #[strong= item.username]#[span.visually-hidden= ' (only admins see this)']
+
+block content
+    - var anonymityHint = 'Hidden from other readers. Admins can still see who wrote it.'
+    - var replyRule = 'Only the question box author, the commenter or an admin can reply.'
+    - var canReply = (c) => user && (user.id === post.author_id || user.id === c.user_id || user.isAdmin)
+    //- Say the reply rule once, and only to someone it actually limits.
+    - var someLocked = user && comments.some((c) => !canReply(c))
+    article.post-detail
+        header.post-header
+            h1= post.title
+            //- Meta on the left, the owner's actions on the right: off the
+            //- reading path, in the same quiet text style as the thread.
+            .post-header-row
+                p.post-meta
+                    span.post-meta-items
+                        span.author by #{post.author_name}
+                        time.date(datetime=isoDate(post.created_at))= formatDate(post.created_at)
+                        if post.updated_at
+                            span.updated edited #[time(datetime=isoDate(post.updated_at))= formatDate(post.updated_at)]
+
+                if user && (user.id === post.author_id || user.isAdmin)
+                    - var n = comments.length
+                    - var deleteMessage = n === 0 ? `“${post.title}” will be deleted. This can't be undone.` : `“${post.title}” and its ${n === 1 ? 'comment' : `${n} comments`}, with any replies, will be deleted. This can't be undone.`
+                    .post-actions
+                        a.btn.btn-small.btn-edit(href=`/post/${post.id}/edit` aria-label="Edit this question box") Edit
+                        form.inline-form(action=`/post/${post.id}/delete` method="POST" data-confirm-title="Delete this question box?" data-confirm=deleteMessage)
+                            button.btn.btn-small.btn-delete(type="submit" aria-label="Delete this question box") Delete
+
+        .post-content= post.content
+
+    section.comments-section(aria-labelledby="comments-heading" data-viewer-admin=user && user.isAdmin ? 'true' : false)
+        //- Reading order: the conversation first, then the form to join it.
+        .comments-header
+            //- The thread's bold moment: the count leads, as a display numeral.
+            //- With no comments the heading steps back to a muted "Comments" so
+            //- the sleepy-Shiba empty state leads instead of a big red 0.
+            h2#comments-heading(tabindex="-1" class=comments.length === 0 ? 'is-empty' : undefined)
+                span#comment-count.comments-count= comments.length
+                = ' '
+                span#comment-count-label.comments-label= comments.length === 0 ? 'Comments' : comments.length === 1 ? 'comment' : 'comments'
+            if user && comments.length > 0
+                a.comments-jump(href="#leave-comment") Write a comment
+        if someLocked
+            p.reply-rule= replyRule
+
+
+        .comments-list
+            if comments.length === 0
+                +noComments()
+            else
+                each comment in comments
+                    .comment(data-comment-id=comment.id data-post-id=post.id data-comment-author-id=comment.user_id)
+                        +authorLine(comment, 'comment')
+                        .comment-content= comment.content
+                        - var commentBy = `comment by ${comment.is_anonymous ? 'Anonymous' : comment.username}`
+                        .comment-actions
+                            if canReply(comment)
+                                button.btn.btn-small.btn-reply(type="button" data-comment-id=comment.id aria-expanded="false" aria-controls=`reply-form-${comment.id}` aria-label=`Reply to ${commentBy}`) Reply
+                            if user && (user.id === comment.user_id || user.isAdmin)
+                                button.btn.btn-small.btn-delete-comment(type="button" data-comment-id=comment.id aria-label=`Delete ${commentBy}`) Delete
+
+                        .reply-form-container(id=`reply-form-${comment.id}` hidden)
+                            form.reply-form(data-comment-id=comment.id)
+                                label.visually-hidden(for=`reply-input-${comment.id}`) Your reply
+                                textarea.reply-input(id=`reply-input-${comment.id}` name="content" placeholder="Write your reply…" required)
+                                .form-row
+                                    .anon-field
+                                        label
+                                            input.reply-anonymous-checkbox(type="checkbox" name="is_anonymous" aria-describedby=`reply-anonymous-hint-${comment.id}`)
+                                            |  Reply anonymously
+                                        p.field-hint(id=`reply-anonymous-hint-${comment.id}`)= anonymityHint
+                                    .form-buttons
+                                        button.btn.btn-small.btn-primary(type="submit") Add Reply
+                                        button.btn.btn-small.btn-cancel-reply(type="button") Cancel
+                                p.form-status(role="status")
+
+                        if comment.replies && comment.replies.length > 0
+                            .replies-list
+                                each reply in comment.replies
+                                    .reply(data-reply-id=reply.id)
+                                        +authorLine(reply, 'reply')
+                                        .reply-content= reply.content
+                                        if user && (user.id === reply.user_id || user.isAdmin)
+                                            .reply-actions
+                                                button.btn.btn-small.btn-delete-reply(type="button" data-reply-id=reply.id aria-label=`Delete reply by ${reply.is_anonymous ? 'Anonymous' : reply.username}`) Delete
+
+                        //- Results for this comment and its replies (reply posted,
+                        //- deleted, failed) are announced here, next to the change.
+                        p.form-status.comment-status(role="status")
+
+        if user
+            .comment-form
+                h3#leave-comment(tabindex="-1") Leave a Comment
+                form#comment-form(data-post-id=post.id)
+                    label.visually-hidden(for="comment-content") Your comment
+                    textarea#comment-content(name="content" placeholder="Write your comment here…" required)
+                    .form-row
+                        .anon-field
+                            label
+                                input#anonymous-checkbox(type="checkbox" name="is_anonymous" aria-describedby="anonymous-hint")
+                                |  Comment anonymously
+                            p.field-hint#anonymous-hint= anonymityHint
+                        button.btn.btn-primary(type="submit") Add Comment
+                    p.form-status(role="status")
+        else
+            .login-prompt
+                p #[a(href=loginHref) Log in] or #[a(href=registerHref) register] to leave a comment.
+
+    //- main.js clones this when the last comment is deleted.
+    template#no-comments-template
+        +noComments()
+
+    dialog#confirm-dialog(aria-labelledby="confirm-dialog-title" aria-describedby="confirm-dialog-message")
+        form(method="dialog")
+            h2#confirm-dialog-title
+            p#confirm-dialog-message
+            .form-row.dialog-actions
+                button.btn.btn-secondary(type="submit" value="cancel" autofocus) Cancel
+                button.btn.btn-delete(type="submit" value="confirm") Delete

@@ -1,0 +1,416 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-27T04:10:33.113Z",
+  "title": "Design System: Q&A Box Blog",
+  "extensions": {
+    "colorMeta": {
+      "shiba-cream": {
+        "role": "neutral",
+        "displayName": "Urajiro Cream",
+        "canonical": "#fffdea",
+        "oklch": "oklch(99.1% 0.025 101.9)",
+        "tonalRamp": [
+          "#0b0b09",
+          "#25241e",
+          "#424035",
+          "#605e4e",
+          "#838170",
+          "#a7a597",
+          "#cccbc3",
+          "#efeeec"
+        ]
+      },
+      "shiba-paper": {
+        "role": "neutral",
+        "displayName": "Paper",
+        "canonical": "#fffefa",
+        "oklch": "oklch(99.7% 0.005 95.1)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242423",
+          "#40403d",
+          "#5e5e5a",
+          "#81807d",
+          "#a5a4a2",
+          "#cbcac9",
+          "#eeeeee"
+        ]
+      },
+      "shiba-yellow": {
+        "role": "secondary",
+        "displayName": "Sesame Yellow",
+        "canonical": "#f5eeae",
+        "oklch": "oklch(94.0% 0.082 102.6)",
+        "tonalRamp": [
+          "#0c0b06",
+          "#27250e",
+          "#464114",
+          "#665f22",
+          "#898246",
+          "#aca777",
+          "#cfccb0",
+          "#f0efe6"
+        ]
+      },
+      "shiba-yellow-deep": {
+        "role": "secondary",
+        "displayName": "Deep Sesame",
+        "canonical": "#ece2a0",
+        "oklch": "oklch(90.5% 0.085 100.6)",
+        "tonalRamp": [
+          "#0c0b06",
+          "#28240d",
+          "#484011",
+          "#685f1d",
+          "#8b8242",
+          "#aea674",
+          "#d0ccaf",
+          "#f0efe5"
+        ]
+      },
+      "shiba-red-tan": {
+        "role": "primary",
+        "displayName": "Shiba Red-Tan",
+        "canonical": "#a3461a",
+        "oklch": "oklch(51.0% 0.135 42.8)",
+        "tonalRamp": [
+          "#120805",
+          "#3c1809",
+          "#6b2806",
+          "#993d0d",
+          "#c16138",
+          "#de8e6d",
+          "#eebeab",
+          "#fbeae4"
+        ]
+      },
+      "shiba-red-tan-deep": {
+        "role": "primary",
+        "displayName": "Deep Red-Tan",
+        "canonical": "#8a3712",
+        "oklch": "oklch(44.7% 0.123 41.5)",
+        "tonalRamp": [
+          "#120906",
+          "#3a190d",
+          "#682b11",
+          "#95411e",
+          "#bc6442",
+          "#d99074",
+          "#ecbfaf",
+          "#faebe5"
+        ]
+      },
+      "shiba-tan-light": {
+        "role": "primary",
+        "displayName": "Tan on Black",
+        "canonical": "#eba873",
+        "oklch": "oklch(78.4% 0.105 58.8)",
+        "tonalRamp": [
+          "#100a05",
+          "#351e0a",
+          "#5e3309",
+          "#884d12",
+          "#ae6f3b",
+          "#cc986f",
+          "#e3c4ac",
+          "#f7ece4"
+        ]
+      },
+      "shiba-black": {
+        "role": "neutral",
+        "displayName": "Shiba Black",
+        "canonical": "#2b2118",
+        "oklch": "oklch(25.7% 0.022 63.6)",
+        "tonalRamp": [
+          "#0c0b0a",
+          "#28231f",
+          "#463e36",
+          "#675b51",
+          "#8a7e73",
+          "#ada299",
+          "#cfc9c4",
+          "#f0eeec"
+        ]
+      },
+      "shiba-bark": {
+        "role": "neutral",
+        "displayName": "Bark",
+        "canonical": "#6b5a45",
+        "oklch": "oklch(47.9% 0.039 72.6)",
+        "tonalRamp": [
+          "#0d0b09",
+          "#29231b",
+          "#4a3d2e",
+          "#6b5a45",
+          "#8f7d67",
+          "#b1a290",
+          "#d2c9be",
+          "#f1eeea"
+        ]
+      },
+      "shiba-whisker": {
+        "role": "neutral",
+        "displayName": "Whisker",
+        "canonical": "#8c7a5e",
+        "oklch": "oklch(58.9% 0.046 78.6)",
+        "tonalRamp": [
+          "#0d0b08",
+          "#2a2318",
+          "#4a3e2a",
+          "#6c5b40",
+          "#8f7d61",
+          "#b1a28b",
+          "#d2c9bc",
+          "#f1eee9"
+        ]
+      },
+      "shiba-hairline": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "#ebe1bd",
+        "oklch": "oklch(90.9% 0.049 94.3)",
+        "tonalRamp": [
+          "#0c0b08",
+          "#272418",
+          "#464029",
+          "#665d3e",
+          "#89805f",
+          "#aca58a",
+          "#cfcbbb",
+          "#f0eee9"
+        ]
+      },
+      "warn-red": {
+        "role": "tertiary",
+        "displayName": "Warning Red",
+        "canonical": "#b3261e",
+        "oklch": "oklch(50.1% 0.178 28.7)",
+        "tonalRamp": [
+          "#150705",
+          "#430f0b",
+          "#78110c",
+          "#ac1d17",
+          "#d64a3d",
+          "#f17f70",
+          "#fbb7ac",
+          "#ffe8e4"
+        ]
+      },
+      "warn-red-deep": {
+        "role": "tertiary",
+        "displayName": "Deep Warning Red",
+        "canonical": "#8c1d17",
+        "oklch": "oklch(42.0% 0.147 28.5)",
+        "tonalRamp": [
+          "#130806",
+          "#3f1410",
+          "#70201a",
+          "#a03229",
+          "#c9574b",
+          "#e5877a",
+          "#f4bbb2",
+          "#fde9e6"
+        ]
+      },
+      "leaf-green": {
+        "role": "tertiary",
+        "displayName": "Leaf Green",
+        "canonical": "#2f5d1e",
+        "oklch": "oklch(43.0% 0.106 138.3)",
+        "tonalRamp": [
+          "#080d07",
+          "#182912",
+          "#284a1c",
+          "#3d6b2d",
+          "#5f8f4f",
+          "#8ab27e",
+          "#bbd3b4",
+          "#e9f1e7"
+        ]
+      },
+      "leaf-wash": {
+        "role": "tertiary",
+        "displayName": "Leaf Wash",
+        "canonical": "#eef2d8",
+        "oklch": "oklch(95.1% 0.034 114.2)",
+        "tonalRamp": [
+          "#0b0b09",
+          "#24251c",
+          "#3f4131",
+          "#5d604a",
+          "#7f836b",
+          "#a4a793",
+          "#caccc0",
+          "#eeefeb"
+        ]
+      },
+      "warn-wash": {
+        "role": "tertiary",
+        "displayName": "Warn Wash",
+        "canonical": "#fbe6dd",
+        "oklch": "oklch(93.9% 0.026 44.7)",
+        "tonalRamp": [
+          "#0d0b0a",
+          "#29221f",
+          "#493d37",
+          "#6b5952",
+          "#8e7c74",
+          "#b1a19a",
+          "#d2c8c4",
+          "#f1eeec"
+        ]
+      },
+      "sun-wash": {
+        "role": "tertiary",
+        "displayName": "Sun Wash",
+        "canonical": "#fbf3cc",
+        "oklch": "oklch(96.1% 0.051 97.7)",
+        "tonalRamp": [
+          "#0c0b08",
+          "#272417",
+          "#454027",
+          "#655e3c",
+          "#88815d",
+          "#aba588",
+          "#cecbba",
+          "#f0efe9"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "The 404 numeral only."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Page headings and the single question box title."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Question box titles in the list and section headings."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Post and comment text; post content keeps its whitespace."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Admin badge and comment author names."
+      }
+    },
+    "shadows": [],
+    "motion": [],
+    "breakpoints": []
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one main action per view: Publish, Log In, Register, Add Comment.",
+      "html": "<button class=\"ds-btn-primary\">Publish</button>",
+      "css": ".ds-btn-primary{padding:10px 20px;border:1px solid;border-radius:5px;font:inherit;font-size:1em;line-height:1.4;cursor:pointer;background:var(--color-accent,#a3461a);border-color:var(--color-accent,#a3461a);color:var(--color-on-accent,#fffdea);}.ds-btn-primary:hover{background:var(--color-accent-hover,#8a3712);border-color:var(--color-accent-hover,#8a3712);}.ds-btn-primary:focus-visible{outline:2px solid var(--color-focus,#8a3712);outline-offset:2px;}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Everyday actions: Edit, Reply, Cancel, pagination.",
+      "html": "<button class=\"ds-btn-secondary\">Edit</button>",
+      "css": ".ds-btn-secondary{padding:10px 20px;border:1px solid;border-radius:5px;font:inherit;font-size:1em;line-height:1.4;cursor:pointer;background:var(--color-secondary,#f5eeae);border-color:var(--color-border-strong,#8c7a5e);color:var(--color-ink,#2b2118);}.ds-btn-secondary:hover{background:var(--color-secondary-hover,#ece2a0);}.ds-btn-secondary:focus-visible{outline:2px solid var(--color-focus,#8a3712);outline-offset:2px;}"
+    },
+    {
+      "name": "Destructive Button",
+      "kind": "button",
+      "refersTo": "button-destructive",
+      "description": "Delete only. Red outline at rest, solid red on hover.",
+      "html": "<button class=\"ds-btn-destructive\">Delete</button>",
+      "css": ".ds-btn-destructive{padding:10px 20px;border:1px solid;border-radius:5px;font:inherit;font-size:1em;line-height:1.4;cursor:pointer;background:var(--color-surface,#fffefa);border-color:var(--color-destructive,#b3261e);color:var(--color-destructive,#b3261e);}.ds-btn-destructive:hover{background:var(--color-destructive,#b3261e);color:var(--color-on-destructive,#fffefa);}.ds-btn-destructive:focus-visible{outline:2px solid var(--color-focus,#8a3712);outline-offset:2px;}"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Paper field with a whisker outline; red-tan on focus.",
+      "html": "<input class=\"ds-input\" placeholder=\"Title\">",
+      "css": ".ds-input{padding:10px;border:1px solid var(--color-border-strong,#8c7a5e);border-radius:5px;background:var(--color-surface,#fffefa);color:var(--color-ink,#2b2118);font:inherit;caret-color:var(--color-accent,#a3461a);}.ds-input:focus{outline:2px solid var(--color-focus,#8a3712);outline-offset:0;border-color:var(--color-accent,#a3461a);}"
+    },
+    {
+      "name": "Nav Band",
+      "kind": "nav",
+      "refersTo": "nav-band",
+      "description": "Sesame-yellow header with red-tan brand and the black admin badge.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav-brand\" href=\"#\">Q&amp;A Box Blog</a><span class=\"ds-nav-right\"><span class=\"ds-badge\">[Admin]</span><a class=\"ds-nav-link\" href=\"#\">New Post</a></span></nav>",
+      "css": ".ds-nav{display:flex;justify-content:space-between;align-items:center;padding:15px 20px;background:var(--color-band,#f5eeae);font-family:Arial,sans-serif;}.ds-nav-brand{font-size:1.5em;font-weight:bold;color:var(--color-accent,#a3461a);text-decoration:none;}.ds-nav-brand:hover{color:var(--color-accent-hover,#8a3712);}.ds-nav-right{display:flex;align-items:center;gap:15px;}.ds-nav-link{color:var(--color-ink,#2b2118);text-decoration:none;padding:8px 15px;border-radius:5px;}.ds-nav-link:hover{background:var(--color-secondary-hover,#ece2a0);}.ds-badge{background:var(--color-ink,#2b2118);color:var(--color-accent-on-dark,#eba873);padding:3px 8px;border-radius:3px;font-size:.85em;font-weight:bold;}"
+    },
+    {
+      "name": "Question Box Row",
+      "kind": "custom",
+      "refersTo": "content-surface",
+      "description": "A question box in the list: a divided row on the paper surface, not a card.",
+      "html": "<div class=\"ds-surface\"><div class=\"ds-row\"><h2 class=\"ds-row-title\"><a href=\"#\">How does the Shiba stay?</a></h2><div class=\"ds-row-meta\"><span>by shiba</span><span>2026/11/26</span><span>2 comments</span></div><p>Preview of the question box text...</p></div><div class=\"ds-row\"><h2 class=\"ds-row-title\"><a href=\"#\">How does the Shiba nap?</a></h2><div class=\"ds-row-meta\"><span>by mochi</span><span>2026/11/25</span><span>0 comments</span></div></div></div>",
+      "css": ".ds-surface{background:var(--color-surface,#fffefa);border:1px solid var(--color-border,#ebe1bd);border-radius:10px;padding:30px;color:var(--color-ink,#2b2118);font-family:Arial,sans-serif;line-height:1.6;}.ds-row+.ds-row{border-top:1px solid var(--color-border,#ebe1bd);padding-top:20px;margin-top:20px;}.ds-row-title{font-size:1.5em;margin:0 0 10px;}.ds-row-title a{color:var(--color-accent,#a3461a);text-decoration:none;}.ds-row-title a:hover{color:var(--color-accent-hover,#8a3712);text-decoration:underline;text-underline-offset:.2em;}.ds-row-meta{display:flex;gap:15px;font-size:.9em;color:var(--color-ink-muted,#6b5a45);}"
+    },
+    {
+      "name": "Flash Message",
+      "kind": "custom",
+      "refersTo": "flash-success",
+      "description": "Success and error feedback from the same Shiba system.",
+      "html": "<div class=\"ds-flash ds-flash-success\">Welcome back, shiba!</div><div class=\"ds-flash ds-flash-error\">Invalid username or password</div>",
+      "css": ".ds-flash{padding:15px;border-radius:5px;text-align:center;font-weight:bold;font-family:Arial,sans-serif;margin-bottom:10px;border:1px solid;}.ds-flash-success{background:var(--color-success-bg,#eef2d8);color:var(--color-success,#2f5d1e);border-color:var(--color-success,#2f5d1e);}.ds-flash-error{background:var(--color-error-bg,#fbe6dd);color:var(--color-destructive-hover,#8c1d17);border-color:var(--color-destructive,#b3261e);}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Shiba Coat",
+    "overview": "Every color in the app comes from a Shiba Inu. The page is the pale cream undercoat (urajiro), the header and footer bands are the sesame-light yellow, the ink is the black of a black-and-tan Shiba, and the single strong accent is the red coat. The owner chose this palette and asked for it to be kept and developed. It is the identity, not a placeholder to be replaced.\n\nThe app is a working blog that people watch over a screen share, so color does structural work. Two surfaces, one strong accent and dark warm ink keep it legible through video compression and at thumbnail size. The red-tan marks what you can read next or act on: titles, the brand, primary buttons. Everything else stays quiet so the accent stays loud.\n\nThis is the color system. Typography, layout and Shiba illustrations are still being redesigned in later steps. Those sections describe the current state and will be updated as those steps land.",
+    "keyCharacteristics": [
+      "Warm cream canvas with one paper-white content surface. No grey anywhere.",
+      "One strong red-tan accent for titles, the brand, links and the primary action.",
+      "Quiet sesame-yellow secondary for everyday actions (Edit, Reply, Cancel, pagination).",
+      "Red appears only on Delete.",
+      "Every text and control pair meets WCAG AA, most well above it."
+    ],
+    "rules": [
+      {
+        "name": "The One Coat Rule",
+        "body": "Every color comes from the Shiba family or from a status role. No Bootstrap blue, no neutral grey, no borrowed alert palettes.",
+        "section": "colors"
+      },
+      {
+        "name": "The Red Means Delete Rule",
+        "body": "Warning Red appears only on delete actions and error feedback. Edit, Reply and Cancel are never red or blue. They use the quiet yellow secondary.",
+        "section": "colors"
+      },
+      {
+        "name": "The Token-Only Rule",
+        "body": "No hex, rgb or named color appears in a CSS rule outside `:root`. To change the palette, change the primitive. To change what something means, remap the role.",
+        "section": "colors"
+      },
+      {
+        "name": "The Two Surfaces Rule",
+        "body": "There is the page and there is the surface. Do not put a filled or bordered card inside the content surface. Group with hairline dividers (solid between siblings, dashed for replies and the inline reply form) and indentation instead.",
+        "section": "elevation"
+      },
+      {
+        "name": "The No Side-Tab Rule",
+        "body": "Don't put a colored bar on one side of a box. Use a full hairline divider, a tint, or a label.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do use the semantic roles in `:root` for every color, and add a new role before adding a one-off value.",
+      "Do keep red-tan for things the reader reads next or acts on: titles, the brand, links and the one primary action.",
+      "Do check every new text pair against 4.5:1 (3:1 for large text and control outlines) on the surface it actually sits on, including the yellow band.",
+      "Do separate items inside the content surface with hairline dividers and space.",
+      "Do develop the Shiba identity (coat colors, Shiba motifs) rather than introducing an unrelated palette."
+    ],
+    "donts": [
+      "Don't reintroduce Bootstrap blue (#007bff), red (#dc3545) or grey (#6c757d) buttons or alert colors.",
+      "Don't use Warning Red for anything except delete actions and error feedback.",
+      "Don't nest a filled or bordered card inside the content surface.",
+      "Don't add a colored bar down one side of a box.",
+      "Don't use neutral greys (#999, #ccc, #f0f0f0) for text or fills. Use Bark for muted text and Hairline for dividers."
+    ]
+  }
+}
