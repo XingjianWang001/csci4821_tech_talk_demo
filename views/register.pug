@@ -9,9 +9,10 @@ block content
 
         form.auth-form(action="/register" method="POST")
             - var errs = errors || {}
-            +field({id: 'username', label: 'Username', value: username, autocomplete: 'username', error: errs.username, autofocus: errs.username})
-            +field({id: 'password', label: 'Password', type: 'password', autocomplete: 'new-password', error: errs.password, autofocus: errs.password && !errs.username})
-            +field({id: 'password2', label: 'Confirm Password', type: 'password', autocomplete: 'new-password', error: errs.password2, autofocus: errs.password2 && !errs.username && !errs.password})
+            - var first = firstErrorField(errs, ['username', 'password', 'password2'])
+            +field({id: 'username', label: 'Username', value: username, autocomplete: 'username', error: errs.username, autofocus: first === 'username'})
+            +field({id: 'password', label: 'Password', type: 'password', autocomplete: 'new-password', error: errs.password, autofocus: first === 'password'})
+            +field({id: 'password2', label: 'Confirm Password', type: 'password', autocomplete: 'new-password', error: errs.password2, autofocus: first === 'password2'})
 
             button.btn.btn-primary(type="submit") Register
 

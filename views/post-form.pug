@@ -9,17 +9,18 @@ block content
         - var draftKey = isEdit ? `draft:/post/${post.id}/edit` : 'draft:/post/new'
         form.post-form(action=isEdit ? `/post/${post.id}/edit` : '/post/new' method="POST" data-draft-key=draftKey)
             - var errs = errors || {}
+            - var first = firstErrorField(errs, ['title', 'content'])
             - var titleValue = values ? values.title : (post ? post.title : '')
             - var contentValue = values ? values.content : (post ? post.content : '')
             .form-group(class=errs.title ? 'has-error' : undefined)
                 label(for="title") Title
-                input#title(type="text" name="title" value=titleValue required aria-invalid=errs.title ? 'true' : undefined aria-describedby=errs.title ? 'title-error' : undefined autofocus=errs.title ? true : undefined)
+                input#title(type="text" name="title" value=titleValue required aria-invalid=errs.title ? 'true' : undefined aria-describedby=errs.title ? 'title-error' : undefined autofocus=first === 'title' ? true : undefined)
                 if errs.title
                     p.field-error#title-error= errs.title
 
             .form-group(class=errs.content ? 'has-error' : undefined)
                 label(for="content") Content
-                textarea#content(name="content" rows="10" required aria-invalid=errs.content ? 'true' : undefined aria-describedby=errs.content ? 'content-error' : undefined autofocus=errs.content && !errs.title ? true : undefined)= contentValue
+                textarea#content(name="content" rows="10" required aria-invalid=errs.content ? 'true' : undefined aria-describedby=errs.content ? 'content-error' : undefined autofocus=first === 'content' ? true : undefined)= contentValue
                 if errs.content
                     p.field-error#content-error= errs.content
 

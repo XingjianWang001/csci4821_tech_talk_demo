@@ -186,6 +186,13 @@ function fieldErrors(messages) {
         Object.entries(messages).filter(([ , message ]) => message));
 }
 
+// The first field, in reading order, that has an error: it alone gets
+// `autofocus`. Views pass their fields in the order they render them.
+function firstErrorField(errors, fields) {
+    return fields.find((name) => errors && errors[name]);
+}
+app.locals.firstErrorField = firstErrorField;
+
 app.get('/', async (req, res) => {
     const limit = 10;
     const totalCount = await data.getTotalPostsCount();
@@ -207,11 +214,23 @@ app.get('/', async (req, res) => {
                {posts, currentPage : page, totalPages, title : 'Question Box Blog'});
 });
 
-app.get('/register', (req, res) => {
-    const returnTo = localPath(req.query.returnTo, req);
-    if (returnTo) req.session.returnTo = returnTo;
-    res.render('register', {title : 'Register', username : ''});
-});
+// Login and register share one shape. The GET remembers where to return to;
+// the POST starts from the trimmed username and a message per blank field,
+// and `fail()` re-shows the form (400) with every error under its field and
+// the username kept. Flashes are only for outcomes.
+const AUTH_FORMS = {
+    login : {title : 'Log In', fields : [ 'username', 'password' ]},
+    register :
+        {title : 'Register', fields : [ 'username', 'password', 'password2' ]}
+};
+
+function showAuthForm(view) {
+    return (req, res) => {
+        const returnTo = localPath(req.query.returnTo, req);
+        if (returnTo) req.session.returnTo = returnTo;
+        res.render(view, {title : AUTH_FORMS[view].title, username : ''});
+    };
+}
 
 // Usernames are compared and stored trimmed, so " devon " and "devon" are the
 // same person and a name made only of spaces is empty.
@@ -219,26 +238,32 @@ function cleanUsername(value) {
     return typeof value === 'string' ? value.trim() : '';
 }
 
+function readAuthForm(view, req, res) {
+    const {title, fields} = AUTH_FORMS[view];
+    const username = cleanUsername(req.body.username);
+    const errors = fieldErrors(Object.fromEntries(fields.map((name) => [
+        name,
+        blankMessage(req.body[name], name === 'username' ? 'username' : 'password')
+    ])));
+    const fail = () =>
+        res.status(400).render(view, {title, username, errors});
+    return {username, errors, fail};
+}
+
+app.get('/register', showAuthForm('register'));
+
 app.post('/register', async (req, res) => {
     const {password, password2} = req.body;
-    const username = cleanUsername(req.body.username);
-    // Field errors re-show the form (400) with the message under the field
-    // and the username kept; flashes are only for outcomes.
-    const fail = (errors) => res.status(400).render(
-        'register', {title : 'Register', username, errors});
-    const blank = fieldErrors({
-        username : blankMessage(req.body.username),
-        password : blankMessage(password, 'password'),
-        password2 : blankMessage(password2, 'password')
-    });
-    if (Object.keys(blank).length) return fail(blank);
-    if (password !== password2) {
-        return fail({password2 : FIELD_MESSAGES.passwordMismatch});
+    const {username, errors, fail} = readAuthForm('register', req, res);
+    // Every problem is reported in one response, so nobody fixes one field
+    // only to learn about the next.
+    if (!errors.password && !errors.password2 && password !== password2) {
+        errors.password2 = FIELD_MESSAGES.passwordMismatch;
     }
-    const existingUser = await data.getUserByUsername(username);
-    if (existingUser) {
-        return fail({username : FIELD_MESSAGES.usernameTaken});
+    if (!errors.username && await data.getUserByUsername(username)) {
+        errors.username = FIELD_MESSAGES.usernameTaken;
     }
+    if (Object.keys(errors).length) return fail();
     const hashedPassword = await bcrypt.hash(password, 10);
     const userId = await data.addUser(username, hashedPassword);
     req.session.user = {id : userId, username, isAdmin : 0};
@@ -247,28 +272,19 @@ app.post('/register', async (req, res) => {
     res.redirect(takeReturnTo(req));
 });
 
-app.get('/login', (req, res) => {
-    const returnTo = localPath(req.query.returnTo, req);
-    if (returnTo) req.session.returnTo = returnTo;
-    res.render('login', {title : 'Log In', username : ''});
-});
+app.get('/login', showAuthForm('login'));
 
 app.post('/login', async (req, res) => {
     const {password} = req.body;
-    const username = cleanUsername(req.body.username);
-    const fail = (errors) => res.status(400).render(
-        'login', {title : 'Log In', username, errors});
-    const blank = fieldErrors({
-        username : blankMessage(req.body.username),
-        password : blankMessage(password, 'password')
-    });
-    if (Object.keys(blank).length) return fail(blank);
+    const {username, errors, fail} = readAuthForm('login', req, res);
+    if (Object.keys(errors).length) return fail();
     // An unknown username and a wrong password get the same message, at the
     // password field, so the form never says which part was wrong.
     const user = await data.getUserByUsername(username);
     const match = user && await bcrypt.compare(password, user.password);
     if (!match) {
-        return fail({password : FIELD_MESSAGES.wrongCredentials});
+        errors.password = FIELD_MESSAGES.wrongCredentials;
+        return fail();
     }
     req.session.user = {
         id : user.id,
