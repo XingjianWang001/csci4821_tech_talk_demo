@@ -210,7 +210,7 @@ Both load from Google Fonts with one `<link>` in `views/layout.pug` and `display
 | `--text-display` | clamp(4.5rem … 7rem) | the 404 numeral only |
 | `--text-xl` | clamp(1.875rem … 2.625rem) | page h1, question box title on its page |
 | `--text-lg` | clamp(1.375rem … 1.625rem) | list titles, h2 |
-| `--text-md` | 1.25rem | h3, brand, empty-state line |
+| `--text-md` | 1.25rem | h3, brand, empty question box list title |
 | `--text-base` | 1.0625rem | body, post content, comments |
 | `--text-sm` | 0.9375rem | meta lines, nav links, replies, buttons (small) |
 | `--text-xs` | 0.8125rem | badges, helper text, the admin reveal |
@@ -269,7 +269,7 @@ Three roles that are distinct in fill as well as hue, so they can't be confused 
 - **Reply rule:** "Only the question box author, the commenter or an admin can reply." appears once under the heading, and only for a logged-in reader who can't reply to at least one comment.
 - **One composer at a time:** while any reply form is open, Add Comment steps down to the secondary look, so Add Reply is the only filled button.
 - **Comment thread order:** the count heading (with a "Write a comment" jump link when there are comments), then the comments, then the "Leave a Comment" form, or the guest's log-in prompt, closing the thread after a hairline and `--space-6`. Reading comes before writing; a new comment lands just above the form.
-- **Comments and replies:** rows divided by hairlines. Replies are indented 24px under their comment with dashed dividers. A just-posted comment or reply gets a short Sun Wash tint.
+- **Comments and replies:** rows divided by straight hairlines; the rows themselves have no corners, so a divider never curls at its ends. Replies are indented 24px under their comment with dashed dividers, and the inline reply form is indented to the same 24px inset, under the comment it answers. A just-posted comment or reply gets a short Sun Wash tint, drawn behind the row below its hairline with 6px corners.
 
 ### Inputs / Fields
 - **Style:** Paper fill, Shiba Black text, a 1px Whisker border and 5px corners.
@@ -299,13 +299,13 @@ The Shiba is the identity anchor. It is an original geometric head (triangle ear
 - **Favicon.**
 - **404**, 120px, `mood: 'lost'` (round eyes and a "?"), with one slow head tilt on load.
 - **Empty question box list**, 96px, `mood: 'sleepy'` (closed eyes and a "z"), with a way forward under it.
-- **Empty comment thread**, 56px, `mood: 'sleepy'`, left-aligned beside "No comments yet. Start the conversation." (the `noComments` mixin, also cloned by `main.js` from a `<template>` when the last comment is deleted).
+- **Empty comment thread**, 56px, `mood: 'sleepy'`, left-aligned beside "No comments yet. Start the conversation." in muted body type at `--text-base`, never the display face, so the muted "Comments" heading above stays the strongest heading (the `noComments` mixin, also cloned by `main.js` from a `<template>` when the last comment is deleted).
 - **Paw** on the admin badge and in the "Comment posted. Thanks for joining in!" / "Reply posted. Thanks for joining in!" acknowledgements, which are announced through the existing `role="status"` regions.
 
 **Rules:**
 - Decorative art is `aria-hidden`; meaningful text sits next to it.
 - Art never pushes content below the fold on the list or question box pages: with the hero, the first question box still starts in the first viewport at 390×844. No mark inside list rows, comments or forms.
-- Motion uses transforms and opacity only, 160–600ms (`--duration-quick`, `--duration-gentle`, `--duration-tap`), one shot (no loops), and lives inside `@media (prefers-reduced-motion: no-preference)`. With reduced motion the new-item tint stays but nothing moves.
+- Motion uses transforms and opacity only, 160–600ms (`--duration-quick`, `--duration-gentle`, `--duration-tap`), one shot (no loops), and lives inside `@media (prefers-reduced-motion: no-preference)`. With reduced motion the new-item tint stays but nothing moves. Flashes, acknowledgements and new items enter with a 6px slide only (`rise-in`), fully opaque from the first frame, so a screenshot taken right after an action is never washed out.
 - No named mascot, no speech bubbles, no confetti, no sound. Don't copy an existing mascot or logo.
 
 ## Do's and Don'ts

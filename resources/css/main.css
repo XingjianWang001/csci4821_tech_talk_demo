@@ -813,10 +813,18 @@ main:focus {
   flex-direction: column;
 }
 
+/* The row draws a straight hairline and has no corners; only the
+ * just-posted tint (::before, below) is rounded. A radius on the row itself
+ * curled the hairline up at both ends. */
+.comment,
+.reply {
+  position: relative;
+  isolation: isolate;
+}
+
 .comment {
   padding-block: var(--space-4);
   border-top: 1px solid var(--color-border);
-  border-radius: var(--radius-control);
 }
 
 /* Comment and reply headers wrap on narrow widths; the admin reveal gets
@@ -938,8 +946,10 @@ main:focus {
   font-size: var(--text-xs);
 }
 
+/* Indented to the replies' inset, so the form sits under its comment. */
 .reply-form-container {
   margin-top: var(--space-3);
+  margin-left: var(--space-5);
   padding-top: var(--space-3);
   border-top: 1px dashed var(--color-border);
 }
@@ -992,10 +1002,11 @@ main:focus {
   padding-block: var(--space-4);
 }
 
+/* Body type, not the display face: the muted "Comments" heading above
+ * stays the strongest heading. */
 .no-comments p {
-  font-family: var(--font-display);
-  font-size: var(--text-md);
-  line-height: var(--leading-snug);
+  font-size: var(--text-base);
+  line-height: var(--leading-body);
   color: var(--color-ink-muted);
 }
 
@@ -1325,9 +1336,15 @@ main:focus {
   }
 }
 
-/* Without motion the new item still gets a static, short-lived tint. */
-.comment.is-new,
-.reply.is-new {
+/* Without motion the new item still gets a static, short-lived tint. It is
+ * drawn behind the row, below its hairline, so the divider stays straight. */
+.comment.is-new::before,
+.reply.is-new::before {
+  content: "";
+  position: absolute;
+  inset: 1px 0 0;
+  z-index: -1;
+  border-radius: var(--radius-control);
   background-color: var(--color-highlight);
 }
 
@@ -1335,13 +1352,13 @@ main:focus {
   transform-origin: 50% 85%;
 }
 
+/* Slide only: flashes and acknowledgements are fully opaque from the first
+ * frame, so a screenshot taken right after an action is never washed out. */
 @keyframes rise-in {
   from {
-    opacity: 0;
     transform: translateY(6px);
   }
   to {
-    opacity: 1;
     transform: none;
   }
 }
