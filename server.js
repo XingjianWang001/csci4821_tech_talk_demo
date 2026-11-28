@@ -117,11 +117,13 @@ app.use((req, res, next) => {
     res.locals.message = req.session.message;
     res.locals.messageType = req.session.messageType;
     res.locals.clearDraft = req.session.clearDraft;
+    res.locals.clearAllDrafts = req.session.clearAllDrafts;
     res.locals.loginHref = authLink('/login', req);
     res.locals.registerHref = authLink('/register', req);
     delete req.session.message;
     delete req.session.messageType;
     delete req.session.clearDraft;
+    delete req.session.clearAllDrafts;
     next();
 });
 
@@ -208,15 +210,26 @@ app.get('/register', (req, res) => {
     res.render('register', {title : 'Register', username});
 });
 
+// Usernames are compared and stored trimmed, so " devon " and "devon" are the
+// same person and a name made only of spaces is empty.
+function cleanUsername(value) {
+    return typeof value === 'string' ? value.trim() : '';
+}
+
 app.post('/register', async (req, res) => {
-    const {username, password, password2} = req.body;
+    const {password, password2} = req.body;
+    const username = cleanUsername(req.body.username);
     // Validation errors keep the username for the next render of the form.
     const fail = (message) => {
         req.session.message = message;
         req.session.messageType = 'error';
-        req.session.formUsername = typeof username === 'string' ? username : '';
+        req.session.formUsername = username;
         res.redirect('/register');
     };
+    if (!username && typeof req.body.username === 'string' &&
+        req.body.username !== '') {
+        return fail("Choose a username. Spaces alone don't count.");
+    }
     if (!username || !password || !password2) {
         return fail('Fill in a username and both password fields.');
     }
@@ -244,11 +257,12 @@ app.get('/login', (req, res) => {
 });
 
 app.post('/login', async (req, res) => {
-    const {username, password} = req.body;
+    const {password} = req.body;
+    const username = cleanUsername(req.body.username);
     const fail = (message) => {
         req.session.message = message;
         req.session.messageType = 'error';
-        req.session.formUsername = typeof username === 'string' ? username : '';
+        req.session.formUsername = username;
         res.redirect('/login');
     };
     if (!username || !password) {
@@ -272,13 +286,19 @@ app.post('/login', async (req, res) => {
     res.redirect(takeReturnTo(req));
 });
 
-app.get('/logout', (req, res, next) => {
+// Logging out is a POST from the header form, so a prefetch, crawler or
+// stray image request can't end someone's session. A GET just goes home.
+app.get('/logout', (req, res) => res.redirect('/'));
+
+app.post('/logout', (req, res, next) => {
     // A fresh, empty session carries the goodbye flash; the old one (and
-    // everything in it) is gone.
+    // everything in it) is gone. clearAllDrafts tells main.js to remove
+    // every saved draft, so the next person at this computer sees none.
     req.session.regenerate((err) => {
         if (err) return next(err);
         req.session.message = "You're logged out. See you next time!";
         req.session.messageType = 'success';
+        req.session.clearAllDrafts = true;
         res.redirect('/');
     });
 });

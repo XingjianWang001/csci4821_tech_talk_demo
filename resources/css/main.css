@@ -335,6 +335,21 @@ main:focus {
   white-space: nowrap;
 }
 
+/* Log Out is a button in a form (a POST); it looks exactly like the links. */
+.nav-logout {
+  display: contents;
+}
+
+button.nav-link {
+  margin: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: var(--text-sm);
+  line-height: inherit;
+  cursor: pointer;
+}
+
 .nav-link:hover {
   color: var(--color-ink);
   background-color: var(--color-secondary-hover);

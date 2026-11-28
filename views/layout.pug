@@ -13,7 +13,7 @@ html(lang="en")
         link(rel="stylesheet" href="/css/main.css")
     //- Pages set view variables (for example pageWidth) in this block.
     block vars
-    body(data-clear-draft=clearDraft)
+    body(data-clear-draft=clearDraft data-clear-all-drafts=clearAllDrafts ? 'true' : undefined)
         - var current = (href) => currentPath === href ? 'page' : undefined
         a.skip-link(href="#main") Skip to content
         header.navbar
@@ -30,7 +30,9 @@ html(lang="en")
                                     +paw()
                                     | Admin
                         a.nav-link(href="/post/new" aria-current=current('/post/new')) New Question Box
-                        a.nav-link(href="/logout") Log Out
+                        //- A POST, so a prefetch can't log anyone out.
+                        form.nav-logout(action="/logout" method="post")
+                            button.nav-link(type="submit") Log Out
                     else
                         a.nav-link(href=loginHref aria-current=current('/login')) Log In
                         a.nav-link(href=registerHref aria-current=current('/register')) Register
