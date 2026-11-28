@@ -4,10 +4,17 @@
 document.addEventListener('DOMContentLoaded', () => {
     // sessionStorage can be missing or throw (private mode, blocked storage).
     // Drafts are a convenience, so every access fails quietly.
+    // Every draft belongs to the account that typed it: callers name a page
+    // key ("draft:/post/new") and the stored key adds the owner the server
+    // put on <body> ("draft:/post/new@7"). If one person's session ends and
+    // someone else logs in on the same tab, they never see the draft; the
+    // same person logging back in gets it back.
+    const draftOwner = document.body.dataset.draftOwner || 'guest';
+    const ownKey = (key) => `${key}@${draftOwner}`;
     const drafts = {
         get(key) {
             try {
-                return window.sessionStorage.getItem(key);
+                return window.sessionStorage.getItem(ownKey(key));
             } catch {
                 return null;
             }
@@ -15,9 +22,9 @@ document.addEventListener('DOMContentLoaded', () => {
         set(key, value) {
             try {
                 if (value) {
-                    window.sessionStorage.setItem(key, value);
+                    window.sessionStorage.setItem(ownKey(key), value);
                 } else {
-                    window.sessionStorage.removeItem(key);
+                    window.sessionStorage.removeItem(ownKey(key));
                 }
             } catch {
                 // ignore
@@ -25,12 +32,13 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         remove(key) {
             try {
-                window.sessionStorage.removeItem(key);
+                window.sessionStorage.removeItem(ownKey(key));
             } catch {
                 // ignore
             }
         },
-        // Every saved draft on every page (all keys start with "draft:").
+        // Every saved draft on every page, whoever owns it (all keys start
+        // with "draft:").
         removeAll() {
             try {
                 Object.keys(window.sessionStorage)
@@ -55,9 +63,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const REQUIRED = 'input[required][type="text"], ' +
                      'input[required][type="password"], textarea[required]';
 
-    function blankMessage(field) {
-        return window.FieldMessages.blankMessage(field.value, field.type);
-    }
+    const {fieldBlankMessage} = window.FieldMessages;
+    const {authorName, byline, commentWord} = window.ThreadText;
 
     function setFieldError(field, message) {
         const id = `${field.id}-error`;
@@ -85,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('input', (e) => {
         const field = e.target;
         if (!field.matches(REQUIRED)) return;
-        const message = blankMessage(field);
+        const message = fieldBlankMessage(field);
         field.setCustomValidity(message && field.value !== '' ? message : '');
         // Typing clears an error that's showing; it never adds one early.
         if (!message || field.getAttribute('aria-invalid') === 'true') {
@@ -103,7 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const field = e.target;
         if (!field.matches(REQUIRED) || !field.id) return;
         e.preventDefault();
-        setFieldError(field, blankMessage(field) || field.validationMessage);
+        setFieldError(field, fieldBlankMessage(field) || field.validationMessage);
         if (!focusedInvalid) {
             focusedInvalid = true;
             field.focus();
@@ -249,9 +256,12 @@ document.addEventListener('DOMContentLoaded', () => {
             };
         }
         if (!response.ok || !data) {
+            // `field` names the input a field error belongs to; other errors
+            // (a missing question box, a permission) have none.
             return {
                 ok : false,
-                error : (data && data.error) || failMessage
+                error : (data && data.error) || failMessage,
+                field : data && data.field
             };
         }
         return {ok : true, data};
@@ -337,6 +347,17 @@ document.addEventListener('DOMContentLoaded', () => {
         showStatus(statusEl, message, type, sessionEnded, options);
     }
 
+    // A failed comment or reply: a field error goes under the textarea like
+    // every other field error; anything else goes in the form's status line.
+    function reportFailure(result, textarea, statusEl) {
+        if (result.field) {
+            setFieldError(textarea, result.error);
+            textarea.focus();
+        } else {
+            report(statusEl, result.error, 'error', result.sessionEnded);
+        }
+    }
+
     // Clears every status in the thread except `keep`. A deleted comment's
     // placeholder goes as soon as its status is cleared.
     function clearStatuses(keep) {
@@ -364,8 +385,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const next = Math.max(0, (parseInt(countEl.textContent, 10) || 0) + delta);
         countEl.textContent = String(next);
         if (countLabelEl) {
-            countLabelEl.textContent =
-                next === 0 ? 'Comments' : next === 1 ? 'comment' : 'comments';
+            countLabelEl.textContent = next === 0 ? 'Comments' : commentWord(next);
         }
         if (heading) heading.classList.toggle('is-empty', next === 0);
     }
@@ -381,10 +401,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // the admin's anonymous-author reveal under it. Returns a node list.
     function authorHeader(kind, item) {
         const header = el('div', `author-line ${kind}-header`);
-        header.append(
-            el('strong', 'author-name',
-               item.is_anonymous ? 'Anonymous' : item.username),
-            timeEl(`${kind}-date`, item));
+        header.append(el('strong', 'author-name', authorName(item)),
+                      timeEl(`${kind}-date`, item));
         if (item.is_anonymous && viewerIsAdmin) {
             const text = el('span', '', 'Posted anonymously by ');
             text.append(el('strong', '', item.username),
@@ -399,12 +417,10 @@ document.addEventListener('DOMContentLoaded', () => {
         return [ header ];
     }
 
-    // Names used in accessible labels: author plus the visible time, so two
-    // comments by the same person still get distinct Reply/Delete names.
-    function authorName(item) {
-        const name = item.is_anonymous ? 'Anonymous' : item.username;
-        return item.created_label ? `${name}, ${item.created_label}` : name;
-    }
+    // Accessible names: author plus the visible time (thread-text.js, which
+    // the server templates use too), so two comments by the same person
+    // still get distinct Reply/Delete names.
+    const itemBy = (item) => byline(item, item.created_label);
 
     function buildReply(reply) {
         const replyEl = el('div', 'reply');
@@ -413,7 +429,7 @@ document.addEventListener('DOMContentLoaded', () => {
         deleteBtn.type = 'button';
         deleteBtn.dataset.replyId = reply.id;
         deleteBtn.setAttribute('aria-label',
-                               `Delete reply by ${authorName(reply)}`);
+                               `Delete reply by ${itemBy(reply)}`);
         const actions = el('div', 'reply-actions');
         actions.append(deleteBtn);
         replyEl.append(...authorHeader('reply', reply),
@@ -432,13 +448,13 @@ document.addEventListener('DOMContentLoaded', () => {
         deleteBtn.type = 'button';
         deleteBtn.dataset.commentId = comment.id;
         deleteBtn.setAttribute('aria-label',
-                               `Delete comment by ${authorName(comment)}`);
+                               `Delete comment by ${itemBy(comment)}`);
         // The author of a comment can always reply to it.
         const replyBtn = el('button', 'btn btn-small btn-reply', 'Reply');
         replyBtn.type = 'button';
         replyBtn.dataset.commentId = comment.id;
         replyBtn.setAttribute('aria-label',
-                              `Reply to comment by ${authorName(comment)}`);
+                              `Reply to comment by ${itemBy(comment)}`);
         replyBtn.setAttribute('aria-expanded', 'false');
         replyBtn.setAttribute('aria-controls', `reply-form-${comment.id}`);
         actions.append(replyBtn, deleteBtn);
@@ -601,7 +617,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }, "Couldn't add your comment. Refresh the page and try again.");
         setBusy(form, false);
         if (!result.ok) {
-            report(status, result.error, 'error', result.sessionEnded);
+            reportFailure(result, textarea, status);
             return;
         }
         const noComments = commentsList.querySelector('.no-comments');
@@ -645,7 +661,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }, "Couldn't add your reply. Refresh the page and try again.");
         setBusy(form, false);
         if (!result.ok) {
-            report(status, result.error, 'error', result.sessionEnded);
+            reportFailure(result, textarea, status);
             return;
         }
         const statusEl = commentStatus(commentEl);

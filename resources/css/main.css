@@ -424,8 +424,13 @@ button.nav-link {
 }
 
 /* ---- page shell: one column, footer at the bottom ---- */
-.page {
+/* main holds the flash, the hero and the page; it grows so the footer sits
+ * at the bottom of short pages. */
+.site-main {
   flex: 1;
+}
+
+.page {
   width: 100%;
   max-width: calc(var(--column) + 2 * var(--gutter));
   margin: 0 auto;
@@ -604,7 +609,9 @@ button.nav-link {
 
 /* ---- home: question box list ---- */
 
+/* A size container, so the lead can adapt to the list's own width. */
 .post-list {
+  container: post-list / inline-size;
   list-style: none;
 }
 
@@ -711,10 +718,8 @@ button.nav-link {
   margin-bottom: var(--space-2);
 }
 
-.post-card--lead .comments-count {
-  font-family: var(--font-display);
-  font-weight: var(--weight-regular);
-  margin-right: 0.15em;
+.post-card--lead .count-numeral {
+  margin-right: var(--space-1);
 }
 
 .post-card--lead .post-preview {
@@ -725,8 +730,10 @@ button.nav-link {
   line-clamp: 5;
 }
 
-/* On a phone the fuller preview would push row two below the fold. */
-@media (max-width: 40rem) {
+/* On a phone the fuller preview would push row two below the fold. Like the
+ * header and hero, this asks the list's own width (the same 520px step),
+ * not the viewport's. */
+@container post-list (max-width: 520px) {
   .post-card--lead .post-preview {
     -webkit-line-clamp: 4;
     line-clamp: 4;
@@ -868,14 +875,17 @@ button.nav-link {
   gap: var(--space-2);
 }
 
-.comments-count {
+/* The display numeral: the thread heading's count, and the lead row's. */
+.count-numeral {
+  font-family: var(--font-display);
+  font-weight: var(--weight-regular);
   font-size: var(--text-xl);
   line-height: 1;
   color: var(--color-accent);
 }
 
 /* No comments yet: a muted "Comments" heading, and the empty state leads. */
-#comments-heading.is-empty .comments-count {
+#comments-heading.is-empty .count-numeral {
   display: none;
 }
 

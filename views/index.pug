@@ -40,12 +40,13 @@ block content
                             span.post-meta-items
                                 span.author by #{post.author_name}
                                 time.date(datetime=isoDate(post.created_at))= formatDate(post.created_at)
-                                if isLead && commentCount > 0
-                                    span.comment-count.has-comments
-                                        span.comments-count= commentCount
-                                        = commentCount === 1 ? ' comment' : ' comments'
+                                if commentCount === 0
+                                    span.comment-count No comments yet
                                 else
-                                    span.comment-count(class=commentCount > 0 ? 'has-comments' : undefined)= commentCount === 0 ? 'No comments yet' : commentCount === 1 ? '1 comment' : `${commentCount} comments`
+                                    //- On the lead the number is the thread heading's display numeral.
+                                    span.comment-count.has-comments
+                                        span(class=isLead ? 'count-numeral' : undefined)= commentCount
+                                        = ` ${commentWord(commentCount)}`
                         p.post-preview= isLead ? excerpt(post.content, 400) : excerpt(post.content)
 
     if totalPages > 1

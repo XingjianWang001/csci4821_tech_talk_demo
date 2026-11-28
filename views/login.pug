@@ -9,8 +9,9 @@ block content
 
         form.auth-form(action="/login" method="POST")
             - var errs = errors || {}
-            +field({id: 'username', label: 'Username', value: username, autocomplete: 'username', error: errs.username, autofocus: errs.username})
-            +field({id: 'password', label: 'Password', type: 'password', autocomplete: 'current-password', error: errs.password, autofocus: errs.password && !errs.username})
+            - var first = firstErrorField(errs, ['username', 'password'])
+            +field({id: 'username', label: 'Username', value: username, autocomplete: 'username', error: errs.username, autofocus: first === 'username'})
+            +field({id: 'password', label: 'Password', type: 'password', autocomplete: 'current-password', error: errs.password, autofocus: first === 'password'})
 
             button.btn.btn-primary(type="submit") Log In
 
