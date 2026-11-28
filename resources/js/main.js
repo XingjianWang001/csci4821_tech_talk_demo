@@ -55,9 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const REQUIRED = 'input[required][type="text"], ' +
                      'input[required][type="password"], textarea[required]';
 
-    function blankMessage(field) {
-        return window.FieldMessages.blankMessage(field.value, field.type);
-    }
+    const {fieldBlankMessage} = window.FieldMessages;
 
     function setFieldError(field, message) {
         const id = `${field.id}-error`;
@@ -85,7 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('input', (e) => {
         const field = e.target;
         if (!field.matches(REQUIRED)) return;
-        const message = blankMessage(field);
+        const message = fieldBlankMessage(field);
         field.setCustomValidity(message && field.value !== '' ? message : '');
         // Typing clears an error that's showing; it never adds one early.
         if (!message || field.getAttribute('aria-invalid') === 'true') {
@@ -103,7 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const field = e.target;
         if (!field.matches(REQUIRED) || !field.id) return;
         e.preventDefault();
-        setFieldError(field, blankMessage(field) || field.validationMessage);
+        setFieldError(field, fieldBlankMessage(field) || field.validationMessage);
         if (!focusedInvalid) {
             focusedInvalid = true;
             field.focus();
@@ -249,9 +247,12 @@ document.addEventListener('DOMContentLoaded', () => {
             };
         }
         if (!response.ok || !data) {
+            // `field` names the input a field error belongs to; other errors
+            // (a missing question box, a permission) have none.
             return {
                 ok : false,
-                error : (data && data.error) || failMessage
+                error : (data && data.error) || failMessage,
+                field : data && data.field
             };
         }
         return {ok : true, data};
@@ -335,6 +336,17 @@ document.addEventListener('DOMContentLoaded', () => {
     function report(statusEl, message, type, sessionEnded, options) {
         clearStatuses(statusEl);
         showStatus(statusEl, message, type, sessionEnded, options);
+    }
+
+    // A failed comment or reply: a field error goes under the textarea like
+    // every other field error; anything else goes in the form's status line.
+    function reportFailure(result, textarea, statusEl) {
+        if (result.field) {
+            setFieldError(textarea, result.error);
+            textarea.focus();
+        } else {
+            report(statusEl, result.error, 'error', result.sessionEnded);
+        }
     }
 
     // Clears every status in the thread except `keep`. A deleted comment's
@@ -601,7 +613,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }, "Couldn't add your comment. Refresh the page and try again.");
         setBusy(form, false);
         if (!result.ok) {
-            report(status, result.error, 'error', result.sessionEnded);
+            reportFailure(result, textarea, status);
             return;
         }
         const noComments = commentsList.querySelector('.no-comments');
@@ -645,7 +657,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }, "Couldn't add your reply. Refresh the page and try again.");
         setBusy(form, false);
         if (!result.ok) {
-            report(status, result.error, 'error', result.sessionEnded);
+            reportFailure(result, textarea, status);
             return;
         }
         const statusEl = commentStatus(commentEl);

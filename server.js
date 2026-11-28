@@ -163,22 +163,21 @@ function denyPermission(req, res, message, postId) {
     res.redirect(`/post/${postId}`);
 }
 
-// What the user typed, or '' when it's missing or only whitespace. Content
-// is kept exactly as typed (line breaks matter); only the check trims.
-function filledText(value) {
-    return typeof value === 'string' && value.trim() !== '' ? value : '';
-}
-
-// Question box form: a trimmed title and non-blank content, with a message
-// per field for the form to show next to it.
+// Question box form: a message per blank field for the form to show next to
+// it. When it's ok, the title is saved trimmed and the content exactly as
+// typed (line breaks matter). blankMessage is the only blank check.
 function checkQuestionBox(body) {
-    const title = typeof body.title === 'string' ? body.title.trim() : '';
-    const content = filledText(body.content);
     const errors = fieldErrors({
-        title : blankMessage(body.title),
+        title : blankMessage(body.title, 'title'),
         content : blankMessage(body.content)
     });
-    return {title, content, errors, ok : !errors.title && !errors.content};
+    const ok = Object.keys(errors).length === 0;
+    return {
+        title : ok ? body.title.trim() : '',
+        content : ok ? body.content : '',
+        errors,
+        ok
+    };
 }
 
 // Drops the fields with no message, so `errors` only names real problems.
@@ -425,12 +424,24 @@ app.post('/post/:id/delete', requireLogin, async (req, res) => {
     res.redirect('/');
 });
 
+// The comment and reply APIs. A missing or unknown id is a problem with the
+// page, not with what was typed, so it gets its own message and no `field`.
+// Blank content is a field problem: {error, field: 'content'}, with the same
+// wording the browser uses, so main.js shows it under the textarea.
+function rejectBlankContent(res, content) {
+    const message = blankMessage(content);
+    if (message) res.status(400).json({error : message, field : 'content'});
+    return Boolean(message);
+}
+
 app.post('/api/comment', requireApiLogin, async (req, res) => {
     const {post_id, content, is_anonymous} = req.body;
-    if (!post_id || !filledText(content)) {
-        return res.status(400).json(
-            {error : blankMessage(content) || FIELD_MESSAGES.empty});
+    if (!post_id) {
+        return res.status(400).json({
+            error : "Couldn't tell which question box this comment is for. Refresh the page and try again."
+        });
     }
+    if (rejectBlankContent(res, content)) return;
     try {
         const user = await data.getUserByUsername(req.session.user.username);
         if (!user) {
@@ -438,6 +449,9 @@ app.post('/api/comment', requireApiLogin, async (req, res) => {
                 {error : "Your account couldn't be found. Log in again to continue."});
         }
         req.session.user.id = user.id;
+        if (!await data.getPostById(post_id)) {
+            return res.status(404).json({error : 'This question box no longer exists. Go back to the home page to see the latest ones.'});
+        }
         const commentId = await data.addComment(
             post_id,
             user.id,
@@ -477,10 +491,12 @@ app.delete('/api/comment/:id', requireApiLogin, async (req, res) => {
 
 app.post('/api/reply', requireApiLogin, async (req, res) => {
     const {comment_id, content, is_anonymous} = req.body;
-    if (!comment_id || !filledText(content)) {
-        return res.status(400).json(
-            {error : blankMessage(content) || FIELD_MESSAGES.empty});
+    if (!comment_id) {
+        return res.status(400).json({
+            error : "Couldn't tell which comment this reply is for. Refresh the page and try again."
+        });
     }
+    if (rejectBlankContent(res, content)) return;
     try {
         const user = await data.getUserByUsername(req.session.user.username);
         if (!user) {
