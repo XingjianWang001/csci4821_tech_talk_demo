@@ -14,7 +14,8 @@ html(lang="en")
         link(rel="stylesheet" href="/css/main.css")
     //- Pages set view variables (for example pageWidth) in this block.
     block vars
-    body(data-clear-draft=clearDraft data-clear-all-drafts=clearAllDrafts ? 'true' : undefined)
+    //- data-draft-owner scopes saved drafts to the logged-in account (main.js).
+    body(data-clear-draft=clearDraft data-clear-all-drafts=clearAllDrafts ? 'true' : undefined data-draft-owner=user ? user.id : undefined)
         - var current = (href) => currentPath === href ? 'page' : undefined
         a.skip-link(href="#main") Skip to content
         header.navbar

@@ -4,10 +4,17 @@
 document.addEventListener('DOMContentLoaded', () => {
     // sessionStorage can be missing or throw (private mode, blocked storage).
     // Drafts are a convenience, so every access fails quietly.
+    // Every draft belongs to the account that typed it: callers name a page
+    // key ("draft:/post/new") and the stored key adds the owner the server
+    // put on <body> ("draft:/post/new@7"). If one person's session ends and
+    // someone else logs in on the same tab, they never see the draft; the
+    // same person logging back in gets it back.
+    const draftOwner = document.body.dataset.draftOwner || 'guest';
+    const ownKey = (key) => `${key}@${draftOwner}`;
     const drafts = {
         get(key) {
             try {
-                return window.sessionStorage.getItem(key);
+                return window.sessionStorage.getItem(ownKey(key));
             } catch {
                 return null;
             }
@@ -15,9 +22,9 @@ document.addEventListener('DOMContentLoaded', () => {
         set(key, value) {
             try {
                 if (value) {
-                    window.sessionStorage.setItem(key, value);
+                    window.sessionStorage.setItem(ownKey(key), value);
                 } else {
-                    window.sessionStorage.removeItem(key);
+                    window.sessionStorage.removeItem(ownKey(key));
                 }
             } catch {
                 // ignore
@@ -25,12 +32,13 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         remove(key) {
             try {
-                window.sessionStorage.removeItem(key);
+                window.sessionStorage.removeItem(ownKey(key));
             } catch {
                 // ignore
             }
         },
-        // Every saved draft on every page (all keys start with "draft:").
+        // Every saved draft on every page, whoever owns it (all keys start
+        // with "draft:").
         removeAll() {
             try {
                 Object.keys(window.sessionStorage)
