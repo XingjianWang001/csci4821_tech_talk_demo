@@ -424,8 +424,13 @@ button.nav-link {
 }
 
 /* ---- page shell: one column, footer at the bottom ---- */
-.page {
+/* main holds the flash, the hero and the page; it grows so the footer sits
+ * at the bottom of short pages. */
+.site-main {
   flex: 1;
+}
+
+.page {
   width: 100%;
   max-width: calc(var(--column) + 2 * var(--gutter));
   margin: 0 auto;
