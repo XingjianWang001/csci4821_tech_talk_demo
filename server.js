@@ -2,6 +2,7 @@ const express = require('express');
 const session = require('express-session');
 const bcrypt = require('bcrypt');
 const data = require('./data');
+const {FIELD_MESSAGES, blankMessage} = require('./resources/js/field-messages');
 const app = express();
 const port = process.env.PORT || 4131;
 
@@ -173,12 +174,17 @@ function filledText(value) {
 function checkQuestionBox(body) {
     const title = typeof body.title === 'string' ? body.title.trim() : '';
     const content = filledText(body.content);
-    const errors = {};
-    if (!title) errors.title = "Add a title. Spaces alone don't count.";
-    if (!content) {
-        errors.content = "Write some content. Spaces and blank lines alone don't count.";
-    }
+    const errors = fieldErrors({
+        title : blankMessage(body.title),
+        content : blankMessage(body.content)
+    });
     return {title, content, errors, ok : !errors.title && !errors.content};
+}
+
+// Drops the fields with no message, so `errors` only names real problems.
+function fieldErrors(messages) {
+    return Object.fromEntries(
+        Object.entries(messages).filter(([ , message ]) => message));
 }
 
 app.get('/', async (req, res) => {
@@ -205,9 +211,7 @@ app.get('/', async (req, res) => {
 app.get('/register', (req, res) => {
     const returnTo = localPath(req.query.returnTo, req);
     if (returnTo) req.session.returnTo = returnTo;
-    const username = req.session.formUsername || '';
-    delete req.session.formUsername;
-    res.render('register', {title : 'Register', username});
+    res.render('register', {title : 'Register', username : ''});
 });
 
 // Usernames are compared and stored trimmed, so " devon " and "devon" are the
@@ -219,26 +223,22 @@ function cleanUsername(value) {
 app.post('/register', async (req, res) => {
     const {password, password2} = req.body;
     const username = cleanUsername(req.body.username);
-    // Validation errors keep the username for the next render of the form.
-    const fail = (message) => {
-        req.session.message = message;
-        req.session.messageType = 'error';
-        req.session.formUsername = username;
-        res.redirect('/register');
-    };
-    if (!username && typeof req.body.username === 'string' &&
-        req.body.username !== '') {
-        return fail("Choose a username. Spaces alone don't count.");
-    }
-    if (!username || !password || !password2) {
-        return fail('Fill in a username and both password fields.');
-    }
+    // Field errors re-show the form (400) with the message under the field
+    // and the username kept; flashes are only for outcomes.
+    const fail = (errors) => res.status(400).render(
+        'register', {title : 'Register', username, errors});
+    const blank = fieldErrors({
+        username : blankMessage(req.body.username),
+        password : blankMessage(password, 'password'),
+        password2 : blankMessage(password2, 'password')
+    });
+    if (Object.keys(blank).length) return fail(blank);
     if (password !== password2) {
-        return fail("The passwords don't match. Enter the same password in both fields.");
+        return fail({password2 : FIELD_MESSAGES.passwordMismatch});
     }
     const existingUser = await data.getUserByUsername(username);
     if (existingUser) {
-        return fail('That username is taken. Choose a different one.');
+        return fail({username : FIELD_MESSAGES.usernameTaken});
     }
     const hashedPassword = await bcrypt.hash(password, 10);
     const userId = await data.addUser(username, hashedPassword);
@@ -251,30 +251,25 @@ app.post('/register', async (req, res) => {
 app.get('/login', (req, res) => {
     const returnTo = localPath(req.query.returnTo, req);
     if (returnTo) req.session.returnTo = returnTo;
-    const username = req.session.formUsername || '';
-    delete req.session.formUsername;
-    res.render('login', {title : 'Log In', username});
+    res.render('login', {title : 'Log In', username : ''});
 });
 
 app.post('/login', async (req, res) => {
     const {password} = req.body;
     const username = cleanUsername(req.body.username);
-    const fail = (message) => {
-        req.session.message = message;
-        req.session.messageType = 'error';
-        req.session.formUsername = username;
-        res.redirect('/login');
-    };
-    if (!username || !password) {
-        return fail('Enter your username and password.');
-    }
+    const fail = (errors) => res.status(400).render(
+        'login', {title : 'Log In', username, errors});
+    const blank = fieldErrors({
+        username : blankMessage(req.body.username),
+        password : blankMessage(password, 'password')
+    });
+    if (Object.keys(blank).length) return fail(blank);
+    // An unknown username and a wrong password get the same message, at the
+    // password field, so the form never says which part was wrong.
     const user = await data.getUserByUsername(username);
-    if (!user) {
-        return fail("That username and password don't match. Check them and try again.");
-    }
-    const match = await bcrypt.compare(password, user.password);
+    const match = user && await bcrypt.compare(password, user.password);
     if (!match) {
-        return fail("That username and password don't match. Check them and try again.");
+        return fail({password : FIELD_MESSAGES.wrongCredentials});
     }
     req.session.user = {
         id : user.id,
@@ -433,7 +428,8 @@ app.post('/post/:id/delete', requireLogin, async (req, res) => {
 app.post('/api/comment', requireApiLogin, async (req, res) => {
     const {post_id, content, is_anonymous} = req.body;
     if (!post_id || !filledText(content)) {
-        return res.status(400).json({error : 'Write something before adding your comment.'});
+        return res.status(400).json(
+            {error : blankMessage(content) || FIELD_MESSAGES.empty});
     }
     try {
         const user = await data.getUserByUsername(req.session.user.username);
@@ -482,7 +478,8 @@ app.delete('/api/comment/:id', requireApiLogin, async (req, res) => {
 app.post('/api/reply', requireApiLogin, async (req, res) => {
     const {comment_id, content, is_anonymous} = req.body;
     if (!comment_id || !filledText(content)) {
-        return res.status(400).json({error : 'Write something before adding your reply.'});
+        return res.status(400).json(
+            {error : blankMessage(content) || FIELD_MESSAGES.empty});
     }
     try {
         const user = await data.getUserByUsername(req.session.user.username);
