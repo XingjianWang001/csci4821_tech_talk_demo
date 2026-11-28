@@ -372,9 +372,11 @@ document.addEventListener('DOMContentLoaded', () => {
         return [ header ];
     }
 
-    // Names used in accessible labels so each Reply/Delete is distinct.
+    // Names used in accessible labels: author plus the visible time, so two
+    // comments by the same person still get distinct Reply/Delete names.
     function authorName(item) {
-        return item.is_anonymous ? 'Anonymous' : item.username;
+        const name = item.is_anonymous ? 'Anonymous' : item.username;
+        return item.created_label ? `${name}, ${item.created_label}` : name;
     }
 
     function buildReply(reply) {
@@ -633,17 +635,30 @@ document.addEventListener('DOMContentLoaded', () => {
                false, {paw : true});
     }
 
+    // The start of a comment or reply for the delete dialog: whitespace
+    // collapsed, cut on a word boundary near 60 characters. It reaches the
+    // dialog through textContent, so typed HTML shows as text.
+    function quoteStart(text, limit = 60) {
+        const flat = String(text).replace(/\s+/g, ' ').trim();
+        if (flat.length <= limit) return `“${flat}”`;
+        const cut = flat.slice(0, limit);
+        const space = cut.lastIndexOf(' ');
+        return `“${(space > limit / 2 ? cut.slice(0, space) : cut).replace(/[\s.,;:!?]+$/, '')}…”`;
+    }
+
     async function deleteItem(btn, kind) {
         const isComment = kind === 'comment';
+        const itemEl = btn.closest(isComment ? '.comment' : '.reply');
+        const quote = quoteStart(
+            itemEl.querySelector(isComment ? '.comment-content' : '.reply-content')
+                .textContent);
         // Mention replies only when the comment actually has some.
-        const replyCount = isComment
-            ? btn.closest('.comment').querySelectorAll('.reply').length
-            : 0;
+        const replyCount = isComment ? itemEl.querySelectorAll('.reply').length : 0;
         const confirmed = await confirmAction(
             isComment ? 'Delete this comment?' : 'Delete this reply?',
             replyCount === 0
-                ? "This can't be undone."
-                : `Its ${replyCount === 1 ? 'reply' : `${replyCount} replies`} will be deleted too. This can't be undone.`);
+                ? `${quote} will be deleted. This can't be undone.`
+                : `${quote} and its ${replyCount === 1 ? 'reply' : `${replyCount} replies`} will be deleted. This can't be undone.`);
         if (!confirmed) return;
         const id = isComment ? btn.dataset.commentId : btn.dataset.replyId;
         const commentEl = btn.closest('.comment');
