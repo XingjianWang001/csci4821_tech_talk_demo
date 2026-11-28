@@ -608,6 +608,41 @@ button.nav-link {
   overflow-wrap: anywhere;
 }
 
+/* The lead: page 1's newest question box. Not a card (Two Surfaces Rule):
+ * it is set apart by size and extra space above the next hairline. The title
+ * steps up to --text-xl, the preview to body size with two more lines, and
+ * the comment count takes the thread heading's display numeral. */
+.post-list > li:first-child .post-card--lead {
+  padding-bottom: var(--space-5);
+}
+
+.post-card--lead .post-title {
+  font-size: var(--text-xl);
+  margin-bottom: var(--space-2);
+}
+
+.post-card--lead .comments-count {
+  font-family: var(--font-display);
+  font-weight: var(--weight-regular);
+  margin-right: 0.15em;
+}
+
+.post-card--lead .post-preview {
+  margin-top: var(--space-3);
+  font-size: var(--text-base);
+  color: var(--color-ink);
+  -webkit-line-clamp: 5;
+  line-clamp: 5;
+}
+
+/* On a phone the fuller preview would push row two below the fold. */
+@media (max-width: 40rem) {
+  .post-card--lead .post-preview {
+    -webkit-line-clamp: 4;
+    line-clamp: 4;
+  }
+}
+
 /* empty list and 404: a Shiba moment, then the way forward */
 .empty-state,
 .error-container {
