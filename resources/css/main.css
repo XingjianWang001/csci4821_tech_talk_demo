@@ -604,7 +604,9 @@ button.nav-link {
 
 /* ---- home: question box list ---- */
 
+/* A size container, so the lead can adapt to the list's own width. */
 .post-list {
+  container: post-list / inline-size;
   list-style: none;
 }
 
@@ -723,8 +725,10 @@ button.nav-link {
   line-clamp: 5;
 }
 
-/* On a phone the fuller preview would push row two below the fold. */
-@media (max-width: 40rem) {
+/* On a phone the fuller preview would push row two below the fold. Like the
+ * header and hero, this asks the list's own width (the same 520px step),
+ * not the viewport's. */
+@container post-list (max-width: 520px) {
   .post-card--lead .post-preview {
     -webkit-line-clamp: 4;
     line-clamp: 4;
