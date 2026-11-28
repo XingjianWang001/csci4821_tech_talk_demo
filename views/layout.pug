@@ -1,4 +1,5 @@
 include mixins/shiba
+include mixins/form
 
 doctype html
 html(lang="en")
@@ -56,5 +57,6 @@ html(lang="en")
                 p &copy; #{new Date().getFullYear()} Question Box Blog · CSCI4131 Final Project
                 p Made with love by Shiba
 
+        script(src="/js/field-messages.js")
         script(src="/js/main.js")
         block scripts

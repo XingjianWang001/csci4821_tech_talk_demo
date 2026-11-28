@@ -1,0 +1,12 @@
+//- One labelled input with its server-side field error, the same markup the
+//- question box form and main.js use: the message sits under the field,
+//- tied to it by aria-describedby. `autofocus` goes on the first problem
+//- field only (the caller decides which).
+mixin field(opts)
+    - var error = opts.error
+    - var errorId = `${opts.id}-error`
+    .form-group(class=error ? 'has-error' : undefined)
+        label(for=opts.id)= opts.label
+        input(id=opts.id type=opts.type || 'text' name=opts.name || opts.id value=opts.value autocomplete=opts.autocomplete required aria-invalid=error ? 'true' : undefined aria-describedby=error ? errorId : undefined autofocus=opts.autofocus ? true : undefined)
+        if error
+            p.field-error(id=errorId)= error

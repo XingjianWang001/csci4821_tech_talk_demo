@@ -50,15 +50,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Required text fields reject empty and spaces-only input before
     // anything is sent (the server checks the same rule). The message is the
-    // same styled inline error the server renders, not the browser bubble.
-    const REQUIRED = 'input[required][type="text"], textarea[required]';
+    // same styled inline error the server renders, not the browser bubble,
+    // and the wording comes from field-messages.js, which the server uses too.
+    const REQUIRED = 'input[required][type="text"], ' +
+                     'input[required][type="password"], textarea[required]';
 
     function blankMessage(field) {
-        if (field.value === '') return 'Write something here first.';
-        if (field.value.trim() === '') {
-            return "Spaces alone don't count. Write something here.";
-        }
-        return '';
+        return window.FieldMessages.blankMessage(field.value, field.type);
     }
 
     function setFieldError(field, message) {
@@ -112,6 +110,16 @@ document.addEventListener('DOMContentLoaded', () => {
             window.setTimeout(() => { focusedInvalid = false; }, 0);
         }
     }, true);
+
+    // A form the server sent back with field errors marks the first problem
+    // field `autofocus`, but browsers skip autofocus when the window wasn't
+    // focused as the page loaded. Focus it here too, unless something else
+    // already took focus.
+    const firstServerError = document.querySelector('form [aria-invalid="true"]');
+    if (firstServerError &&
+        (document.activeElement === document.body || !document.activeElement)) {
+        firstServerError.focus();
+    }
 
     // The server names a draft to drop after it saved that form for real.
     if (document.body.dataset.clearDraft) {
