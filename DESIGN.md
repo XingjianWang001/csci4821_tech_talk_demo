@@ -65,6 +65,7 @@ spacing:
   gutter: "clamp(16px, 4vw, 32px)"
   column: "760px"
   column-narrow: "440px"
+  mark-hero-compact: "48px"
 components:
   button-primary:
     backgroundColor: "{colors.shiba-red-tan}"
@@ -233,7 +234,8 @@ Line heights: `--leading-tight` 1.15 (headings), `--leading-snug` 1.35 (buttons,
 - The content column is `--column` (760px) wide plus fluid `--gutter` (16–32px) on each side. The header and footer content align to the same column.
 - Login, register and 404 use the narrow column (`--column-narrow`, 440px). A page opts in from its `block vars` with `- var pageWidth = 'narrow'`.
 - The content surface pads with `--panel-pad` (20–40px).
-- The header is a size container. Under 520px of header width it stacks: brand on top, the user line, then the links.
+- The header is a size container. Under 520px of header width it stays on one row with tighter links (see Navigation). The home hero is a size container too: under 520px its mark drops to `--mark-hero-compact` (48px), the lede keeps only its first sentence and the bottom padding drops to `--space-4`, so at 390×844 the first question box starts in the top third of the screen.
+- Flash messages render between the header and the hero (or the page), so a confirmation sits next to the control that caused it.
 - Meta lines, comment headers, form rows, action rows and pagination all `flex-wrap`, so nothing overflows at 390px.
 - Spacing uses the `--space-1` … `--space-8` steps (4, 8, 12, 16, 24, 32, 48, 64px).
 - The `h1` is the first heading on every page. The current nav target has `aria-current="page"` and a red-tan underline.
@@ -281,6 +283,7 @@ Three roles that are distinct in fill as well as hue, so they can't be confused 
 - **Band:** a full-width sesame-yellow bar. The brand is the Shiba mark plus "Question Box Blog" in Young Serif red-tan. Nav links are Shiba Black and take a Deep Sesame fill on hover; the current page is underlined in red-tan.
 - **Log Out:** a `button.nav-link` inside a small POST form (`form.nav-logout`, `display: contents`), so a link prefetch, crawler or stray image request can't log anyone out; `GET /logout` only goes home. It looks and behaves exactly like the other nav links (same font, size, padding, hover and focus). An explicit logout also removes every saved draft (`draft:*` in session storage) on the next page, so the next person at a shared computer sees empty forms; an expired session keeps its drafts for the "your draft will be there" recovery.
 - **Admin badge:** a Shiba Black pill with a Tan on Black paw and the label "Admin". It is the one dark element on the page, so admin mode is unmistakable.
+- **Narrow header (under 520px):** one row, no menu. Guests see the mark, "Question Box Blog" at body size, Log In and Register. Signed-in visitors see the mark alone, the username (cut with an ellipsis when long), the Admin badge, "New" and Log Out. The hidden words ("Question Box Blog", "Welcome," and "Question Box") stay in the accessible names, so the links still read "New Question Box" and "Question Box Blog". Nav controls are direct children of `.nav-right`, so a Log Out form styled as `.nav-link` fits the same row.
 
 ### Field errors
 Required text fields reject empty input and input that is only spaces or blank lines, in the browser and on the server. Either way the message sits directly under the field in bold Deep Warning Red ("Write something here first." / "Spaces alone don't count. Write something here."), with a Warning Red field border, `aria-invalid`, `aria-describedby` and focus on the first problem field in reading order (decided once the browser has checked the whole form, not per field); the browser's validation bubble is never shown. Usernames are trimmed on register and login, and a username made only of spaces is rejected. Typing clears the error. When the question box form comes back from the server, it keeps what was typed.
@@ -289,7 +292,7 @@ Required text fields reject empty input and input that is only spaces or blank l
 On an anonymous comment or reply, admins see a small pill in the author line: a paw and "Posted anonymously by **name**", in the Admin badge's Shiba Black and Tan on Black, so it reads as admin-only at a glance ("only admins see this" is in the accessible name).
 
 ### Flash messages
-Below the header, inside the page column, above the content surface. On narrow pages (login, register, 404) it narrows to the 440px card under it. Success flashes start with the paw, the same acknowledgement as a posted comment. Logging in, publishing and logging out ("You're logged out. See you next time!") all get one. A 1px border in the status color over its wash, bold text, and a dismiss (×) button; dismissing moves focus to the page heading. Errors use `role="alert"`, everything else `role="status"`. Success uses Leaf Green on Leaf Wash, error uses Deep Warning Red on Warn Wash with a Warning Red border, and info uses Shiba Black on Sun Wash.
+Directly under the header, above the home hero and the content surface, aligned to the page column. On the home page the flash sits on the yellow band, so the band runs unbroken from the header through the hero; elsewhere it sits on the cream page and takes the page's top padding. On narrow pages (login, register, 404) it narrows to the 440px card under it. Success flashes start with the paw, the same acknowledgement as a posted comment. Logging in, publishing and logging out ("You're logged out. See you next time!") all get one. A 1px border in the status color over its wash, bold text, and a dismiss (×) button; dismissing moves focus to the page heading. Errors use `role="alert"`, everything else `role="status"`. Success uses Leaf Green on Leaf Wash, error uses Deep Warning Red on Warn Wash with a Warning Red border, and info uses Shiba Black on Sun Wash.
 
 ## Shiba Motif
 
@@ -297,7 +300,7 @@ The Shiba is the identity anchor. It is an original geometric head (triangle ear
 
 **Where it may appear (and nowhere else):**
 - **Brand mark** in the header, 36px, `mood: 'happy'`. Its head tilts a few degrees on hover.
-- **Home hero**, 64–120px (fluid), `mood: 'happy'`, beside the "Question Boxes" h1 and a one-line lede on a continuation of the sesame header band (`block hero` in `layout.pug`). It is the list page's one bold moment and replaces the old definition sentence. The band is chrome, not a box inside the content surface.
+- **Home hero**, 64–120px (fluid; 48px when the hero is under 520px wide), `mood: 'happy'`, beside the "Question Boxes" h1 and a one-line lede on a continuation of the sesame header band (`block hero` in `layout.pug`). It is the list page's one bold moment and replaces the old definition sentence. The band is chrome, not a box inside the content surface.
 - **Favicon.**
 - **404**, 120px, `mood: 'lost'` (round eyes and a "?"), with one slow head tilt on load.
 - **Empty question box list**, 96px, `mood: 'sleepy'` (closed eyes and a "z"), with a way forward under it.
