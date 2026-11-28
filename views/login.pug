@@ -8,13 +8,10 @@ block content
         h1 Log In
 
         form.auth-form(action="/login" method="POST")
-            .form-group
-                label(for="username") Username
-                input#username(type="text" name="username" value=username autocomplete="username" required)
-
-            .form-group
-                label(for="password") Password
-                input#password(type="password" name="password" autocomplete="current-password" required)
+            - var errs = errors || {}
+            - var first = firstErrorField(errs, ['username', 'password'])
+            +field({id: 'username', label: 'Username', value: username, autocomplete: 'username', error: errs.username, autofocus: first === 'username'})
+            +field({id: 'password', label: 'Password', type: 'password', autocomplete: 'current-password', error: errs.password, autofocus: first === 'password'})
 
             button.btn.btn-primary(type="submit") Log In
 

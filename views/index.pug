@@ -1,5 +1,9 @@
 extends layout
 
+block vars
+    //- The flash joins the band when a hero follows it.
+    - var hasHero = true
+
 block hero
     //- The home page's one bold moment: the header band carries on into a
     //- hero with the Shiba mark at full size. Chrome, not a box in the surface.
@@ -8,7 +12,7 @@ block hero
             +shibaMark({size: 120, className: 'home-hero-mark'})
             .home-hero-text
                 h1#home-title Question Boxes
-                p.home-hero-lede Blog posts that start a conversation. Someone writes one, and readers answer in the comments.
+                p.home-hero-lede Blog posts that start a conversation.#[span.home-hero-lede-more  Someone writes one, and readers answer in the comments.]
 
 block content
 
@@ -22,18 +26,28 @@ block content
                 p #[a(href=loginHref) Log in] or #[a(href=registerHref) register] to write the first one.
     else
         ol.post-list
-            each post in posts
+            each post, index in posts
                 - var commentCount = Number(post.comment_count) || 0
+                //- Page 1 leads with the newest question box: a larger title,
+                //- a fuller preview and the count as a display numeral. Same
+                //- h2, same whole-row link; only the treatment changes.
+                - var isLead = currentPage === 1 && index === 0
                 li
-                    article.post-card
+                    article.post-card(class=isLead ? 'post-card--lead' : undefined)
                         h2.post-title
                             a(href=`/post/${post.id}`)= post.title
                         p.post-meta
                             span.post-meta-items
                                 span.author by #{post.author_name}
                                 time.date(datetime=isoDate(post.created_at))= formatDate(post.created_at)
-                                span.comment-count(class=commentCount > 0 ? 'has-comments' : undefined)= commentCount === 0 ? 'No comments yet' : commentCount === 1 ? '1 comment' : `${commentCount} comments`
-                        p.post-preview= excerpt(post.content)
+                                if commentCount === 0
+                                    span.comment-count No comments yet
+                                else
+                                    //- On the lead the number is the thread heading's display numeral.
+                                    span.comment-count.has-comments
+                                        span(class=isLead ? 'count-numeral' : undefined)= commentCount
+                                        = ` ${commentWord(commentCount)}`
+                        p.post-preview= isLead ? excerpt(post.content, 400) : excerpt(post.content)
 
     if totalPages > 1
         nav.pagination(aria-label="Question box pages")

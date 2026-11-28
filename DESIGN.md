@@ -65,6 +65,7 @@ spacing:
   gutter: "clamp(16px, 4vw, 32px)"
   column: "760px"
   column-narrow: "440px"
+  mark-hero-compact: "48px"
 components:
   button-primary:
     backgroundColor: "{colors.shiba-red-tan}"
@@ -208,9 +209,9 @@ Both load from Google Fonts with one `<link>` in `views/layout.pug` and `display
 | Token | Size | Use |
 |---|---|---|
 | `--text-display` | clamp(4.5rem … 7rem) | the 404 numeral only |
-| `--text-xl` | clamp(1.875rem … 2.625rem) | page h1, question box title on its page |
+| `--text-xl` | clamp(1.875rem … 2.625rem) | page h1, question box title on its page, the list lead's title, comment-count numerals |
 | `--text-lg` | clamp(1.375rem … 1.625rem) | list titles, h2 |
-| `--text-md` | 1.25rem | h3, brand, empty-state line |
+| `--text-md` | 1.25rem | h3, brand, empty question box list title |
 | `--text-base` | 1.0625rem | body, post content, comments |
 | `--text-sm` | 0.9375rem | meta lines, nav links, replies, buttons (small) |
 | `--text-xs` | 0.8125rem | badges, helper text, the admin reveal |
@@ -223,6 +224,7 @@ Line heights: `--leading-tight` 1.15 (headings), `--leading-snug` 1.35 (buttons,
 - Titles, bodies, comments and author names use `overflow-wrap: anywhere`, so one very long word wraps instead of overflowing.
 - Meta lines (author · date · comments) are `--text-sm` in Bark, separated by middle dots. They support the title and never compete with it. Every item carries a leading dot that is clipped at the start of a line, so a wrapped meta line never opens with "·". In the list, a non-zero comment count is bold Shiba Black ("No comments yet" stays muted), so rows with a conversation stand out.
 - **List hierarchy:** title in Young Serif `--text-lg`, Shiba Black, turning red-tan with an underline on hover or focus; then the meta line; then the preview at `--text-sm`. Every list title in red-tan made the list a monotone wall, so the accent is reserved for the page h1 and for the row under the pointer.
+- **The lead (page 1 only):** the newest question box is the list's focal point below the hero. Its title steps up to `--text-xl` (still an `h2`, same order as the other rows), its preview is `--text-base` in Shiba Black with a 400-character budget clamped to five lines (four when the list is under 520px wide, so row two stays in the first viewport at 390×844), and a non-zero comment count shows as the thread heading's red-tan Young Serif numeral (`.count-numeral`, `--text-xl`, `--space-1` before the word) followed by "comment"/"comments" in the meta line. With no comments it falls back to the muted "No comments yet". It is not a card: only size and `--space-5` above the next hairline set it apart. Later pages and the empty list have no lead (`post-card--lead` in `index.pug`).
 - Dates use one format everywhere, with no seconds: `Nov 27, 3:04 PM` in the current year and `Nov 27, 2025, 3:04 PM` otherwise (the year is noise in every meta line, and Atkinson's slashed zero made "2026" read oddly) (`formatDate` in `server.js`, the same `Intl.DateTimeFormat` options in `main.js`). They render in `<time datetime>`.
 
 ## Layout
@@ -232,7 +234,8 @@ Line heights: `--leading-tight` 1.15 (headings), `--leading-snug` 1.35 (buttons,
 - The content column is `--column` (760px) wide plus fluid `--gutter` (16–32px) on each side. The header and footer content align to the same column.
 - Login, register and 404 use the narrow column (`--column-narrow`, 440px). A page opts in from its `block vars` with `- var pageWidth = 'narrow'`.
 - The content surface pads with `--panel-pad` (20–40px).
-- The header is a size container. Under 520px of header width it stacks: brand on top, the user line, then the links.
+- The header is a size container. Under 520px of header width it stays on one row with tighter links (see Navigation). The home hero is a size container too: under 520px its mark drops to `--mark-hero-compact` (48px), the lede keeps only its first sentence and the bottom padding drops to `--space-4`, so at 390×844 the first question box starts in the top third of the screen. The question box list (`.post-list`, container `post-list`) is a size container as well, for the lead's clamp. Narrow-screen rules use these 520px container queries, never viewport media queries.
+- `main#main` holds the flash, the hero and the page, so "Skip to content" lands on a flash instead of jumping past it. Flash messages render first in it, between the header and the hero (or the page), so a confirmation sits next to the control that caused it.
 - Meta lines, comment headers, form rows, action rows and pagination all `flex-wrap`, so nothing overflows at 390px.
 - Spacing uses the `--space-1` … `--space-8` steps (4, 8, 12, 16, 24, 32, 48, 64px).
 - The `h1` is the first heading on every page. The current nav target has `aria-current="page"` and a red-tan underline.
@@ -258,18 +261,18 @@ Three roles that are distinct in fill as well as hue, so they can't be confused 
 - **Secondary:** the default button. A sesame-yellow fill, Shiba Black text and a Whisker outline. Used for Edit, Cancel and pagination. Hover goes to Deep Sesame.
 - **Destructive:** in the confirm dialog, a paper fill with a Warning Red outline and text, filling solid red on hover. Everywhere else (question box, comments, replies) a quiet red text button that only gains its outline on hover or focus, and it always comes after Edit or Reply.
 - **One action language:** the question box's Edit/Delete use the same quiet text buttons as the thread and sit at the right of the meta row (wrapping below it on narrow screens), off the reading path.
-- **Thread actions (Reply, comment/reply Delete):** quiet text buttons, so a comment outweighs its actions. Reply is Shiba Black ink text that takes the sesame fill on hover or focus; Delete is Warning Red text that takes its outline on hover or focus, so in the thread ink means act and red means delete. Both keep a 40px hit area. While its form is open, Reply keeps its label and shows as pressed (sesame fill and outline, `aria-expanded="true"`); its width never changes, so Delete never moves. Accessible names include the author ("Reply to comment by demo_viewer").
+- **Thread actions (Reply, comment/reply Delete):** quiet text buttons, so a comment outweighs its actions. Reply is Shiba Black ink text that takes the sesame fill on hover or focus; Delete is Warning Red text that takes its outline on hover or focus, so in the thread ink means act and red means delete. Both keep a 40px hit area. While its form is open, Reply keeps its label and shows as pressed (sesame fill and outline, `aria-expanded="true"`); its width never changes, so Delete never moves. Accessible names include the author and the visible time ("Reply to comment by demo_viewer, Nov 26, 10:37 AM", "Delete reply by demo_author, Nov 26, 2:23 PM"), so two comments by the same person stay distinct. The author name ("Anonymous" when hidden), this name and the comment/comments word come from `resources/js/thread-text.js`, which the server hands to the views and the browser loads before main.js, so server-rendered and newly added items read the same.
 - **States:** hover, `:active` (1px press), `:focus-visible` (2px Deep Red-Tan outline, offset 2px) and `:disabled` (60% opacity, not-allowed cursor). While a request runs, the button says so ("Posting…", "Deleting…").
-- **Delete dialog:** a `<dialog>` with a Young Serif heading ("Delete this comment?") and a plain message that names what goes with it, mentioning replies only when there are some. Cancel has focus; Esc cancels.
+- **Delete dialog:** a `<dialog>` with a Young Serif heading ("Delete this comment?") and a plain message that names what goes with it, mentioning replies only when there are some. For a comment or reply, the message quotes its start (about 60 characters, cut on a word, set as text so typed HTML stays text): "“First thought from the viewer…” and its 3 replies will be deleted. This can't be undone." Cancel has focus; Esc cancels.
 
 ### Cards / Containers
 - **Content surface:** Paper, with a 1px hairline border, 10px corners and 30px padding. It is the only container.
-- **Question boxes in the list:** not cards. Each is an `article` row divided by hairlines; the title link's `::after` covers the whole row, so the row is one link target. Keyboard focus outlines the whole row. The preview is cut on a word boundary (200-character budget) and clamped to three lines.
-- **Comment count:** the thread's heading leads with the count as a red-tan Young Serif numeral at `--text-xl`, then "comment"/"comments" at `--text-lg` (`main.js` keeps both in sync). With no comments the numeral hides and the heading is a muted "Comments", so the sleepy-Shiba empty state leads.
+- **Question boxes in the list:** not cards. Each is an `article` row divided by hairlines; the title link's `::after` covers the whole row, so the row is one link target. Keyboard focus outlines the whole row. The preview is cut on a word boundary (200-character budget) and clamped to three lines. On page 1 the first row is the lead (see Typography > List hierarchy): same row, link and focus outline, larger treatment.
+- **Comment count:** the thread's heading leads with the count as a red-tan Young Serif numeral at `--text-xl` (`.count-numeral`, shared with the list's lead), then "comment"/"comments" at `--text-lg` (`main.js` keeps both in sync, with the same word as the server from `thread-text.js`). With no comments the numeral hides and the heading is a muted "Comments", so the sleepy-Shiba empty state leads.
 - **Reply rule:** "Only the question box author, the commenter or an admin can reply." appears once under the heading, and only for a logged-in reader who can't reply to at least one comment.
 - **One composer at a time:** while any reply form is open, Add Comment steps down to the secondary look, so Add Reply is the only filled button.
 - **Comment thread order:** the count heading (with a "Write a comment" jump link when there are comments), then the comments, then the "Leave a Comment" form, or the guest's log-in prompt, closing the thread after a hairline and `--space-6`. Reading comes before writing; a new comment lands just above the form.
-- **Comments and replies:** rows divided by hairlines. Replies are indented 24px under their comment with dashed dividers. A just-posted comment or reply gets a short Sun Wash tint.
+- **Comments and replies:** rows divided by straight hairlines; the rows themselves have no corners, so a divider never curls at its ends. Replies are indented 24px under their comment with dashed dividers, and the inline reply form is indented to the same 24px inset, under the comment it answers. A just-posted comment or reply gets a short Sun Wash tint, drawn behind the row below its hairline with 6px corners.
 
 ### Inputs / Fields
 - **Style:** Paper fill, Shiba Black text, a 1px Whisker border and 5px corners.
@@ -278,16 +281,29 @@ Three roles that are distinct in fill as well as hue, so they can't be confused 
 
 ### Navigation
 - **Band:** a full-width sesame-yellow bar. The brand is the Shiba mark plus "Question Box Blog" in Young Serif red-tan. Nav links are Shiba Black and take a Deep Sesame fill on hover; the current page is underlined in red-tan.
+- **Log Out:** a `button.nav-link` inside a small POST form (`form.nav-logout`, `display: contents`), so a link prefetch, crawler or stray image request can't log anyone out; `GET /logout` only goes home. It looks and behaves exactly like the other nav links (same font, size, padding, hover and focus). An explicit logout also removes every saved draft (`draft:*` in session storage) on the next page, so the next person at a shared computer sees empty forms; an expired session keeps its drafts for the "your draft will be there" recovery. Drafts also belong to the account that typed them (stored as `<page key>@<user id>`, from `body[data-draft-owner]`), so if a session ends and someone else logs in on the same tab, they never see it; the same person logging back in does.
 - **Admin badge:** a Shiba Black pill with a Tan on Black paw and the label "Admin". It is the one dark element on the page, so admin mode is unmistakable.
+- **Narrow header (under 520px):** one row, no menu. Guests see the mark, "Question Box Blog" at body size, Log In and Register. Signed-in visitors see the mark alone, the username (cut with an ellipsis when long), the Admin badge, "New" and Log Out. The hidden words ("Question Box Blog", "Welcome," and "Question Box") stay in the accessible names, so the links still read "New Question Box" and "Question Box Blog". Nav controls are direct children of `.nav-right`, so a Log Out form styled as `.nav-link` fits the same row.
 
 ### Field errors
-Required text fields reject empty input and input that is only spaces or blank lines, in the browser and on the server. Either way the message sits directly under the field in bold Deep Warning Red ("Write something here first." / "Spaces alone don't count. Write something here."), with a Warning Red field border, `aria-invalid`, `aria-describedby` and focus on the first problem field; the browser's validation bubble is never shown. Typing clears the error. When the question box form comes back from the server, it keeps what was typed.
+Every form (question box, comment, reply, log in, register) reports a problem with a field under that field, never as a flash. Flashes are for outcomes only (logged in, published, deleted, logged out).
+- **Look and wiring:** the message sits directly under the field (`p.field-error#<field>-error`) in bold Deep Warning Red, with a Warning Red field border, `aria-invalid` and `aria-describedby`. Focus goes to the first problem field in reading order (decided once the browser has checked the whole form, not per field). The browser's validation bubble is never shown. Typing clears the error.
+- **Server round trips:** log in, register and the question box form come back as HTTP 400 with the error markup and what was typed (the username; never a password). Every problem comes back in one response (register reports a taken username and mismatched passwords together). The first problem field (`firstErrorField` in `server.js`) carries `autofocus`, and main.js also focuses it, since browsers skip autofocus when the window wasn't focused as the page loaded. Auth fields use the `+field` mixin in `views/mixins/form.pug`.
+- **Comment and reply API:** blank content answers `{error, field: 'content'}` and main.js shows it under the textarea like any field error. A missing or unknown question box or comment is not a field problem: it gets its own message in the form's status line, never "Write something here first."
+- **One vocabulary:** the wording lives once in `resources/js/field-messages.js`, which `server.js` requires and every page loads before main.js, so a problem reads the same whichever side caught it:
+  - Empty required field: "Write something here first."
+  - Only spaces or blank lines: "Spaces alone don't count. Write something here." Passwords only have to be non-empty, since spaces are real password characters.
+  - The question box title names what's missing: "Give your question box a title." when empty, "Spaces alone don't count. Give your question box a title." when only spaces.
+  - Confirm Password differs: "The passwords don't match. Enter the same password in both fields." (under Confirm Password)
+  - Username already registered: "That username is taken. Choose a different one." (under Username)
+  - Unknown username or wrong password: "That username and password don't match. Check them and try again." Both cases show it under Password, so the form never says which part was wrong.
+- Usernames are trimmed on register and login, and a username made only of spaces counts as spaces-only.
 
 ### Admin reveal
 On an anonymous comment or reply, admins see a small pill in the author line: a paw and "Posted anonymously by **name**", in the Admin badge's Shiba Black and Tan on Black, so it reads as admin-only at a glance ("only admins see this" is in the accessible name).
 
 ### Flash messages
-Below the header, inside the page column, above the content surface. On narrow pages (login, register, 404) it narrows to the 440px card under it. Success flashes start with the paw, the same acknowledgement as a posted comment. Logging in, publishing and logging out ("You're logged out. See you next time!") all get one. A 1px border in the status color over its wash, bold text, and a dismiss (×) button; dismissing moves focus to the page heading. Errors use `role="alert"`, everything else `role="status"`. Success uses Leaf Green on Leaf Wash, error uses Deep Warning Red on Warn Wash with a Warning Red border, and info uses Shiba Black on Sun Wash.
+Directly under the header, above the home hero and the content surface, aligned to the page column, and the first thing inside the main landmark. On the home page the flash sits on the yellow band, so the band runs unbroken from the header through the hero; elsewhere it sits on the cream page and takes the page's top padding. On narrow pages (login, register, 404) it narrows to the 440px card under it. Success flashes start with the paw, the same acknowledgement as a posted comment. Logging in, publishing and logging out ("You're logged out. See you next time!") all get one. A 1px border in the status color over its wash, bold text, and a dismiss (×) button; dismissing moves focus to the page heading. Errors use `role="alert"`, everything else `role="status"`. Success uses Leaf Green on Leaf Wash, error uses Deep Warning Red on Warn Wash with a Warning Red border, and info uses Shiba Black on Sun Wash.
 
 ## Shiba Motif
 
@@ -295,17 +311,17 @@ The Shiba is the identity anchor. It is an original geometric head (triangle ear
 
 **Where it may appear (and nowhere else):**
 - **Brand mark** in the header, 36px, `mood: 'happy'`. Its head tilts a few degrees on hover.
-- **Home hero**, 64–120px (fluid), `mood: 'happy'`, beside the "Question Boxes" h1 and a one-line lede on a continuation of the sesame header band (`block hero` in `layout.pug`). It is the list page's one bold moment and replaces the old definition sentence. The band is chrome, not a box inside the content surface.
+- **Home hero**, 64–120px (fluid; 48px when the hero is under 520px wide), `mood: 'happy'`, beside the "Question Boxes" h1 and a one-line lede on a continuation of the sesame header band (`block hero` in `layout.pug`). It is the list page's one bold moment and replaces the old definition sentence. The band is chrome, not a box inside the content surface.
 - **Favicon.**
 - **404**, 120px, `mood: 'lost'` (round eyes and a "?"), with one slow head tilt on load.
 - **Empty question box list**, 96px, `mood: 'sleepy'` (closed eyes and a "z"), with a way forward under it.
-- **Empty comment thread**, 56px, `mood: 'sleepy'`, left-aligned beside "No comments yet. Start the conversation." (the `noComments` mixin, also cloned by `main.js` from a `<template>` when the last comment is deleted).
+- **Empty comment thread**, 56px, `mood: 'sleepy'`, left-aligned beside "No comments yet. Start the conversation." in muted body type at `--text-base`, never the display face, so the muted "Comments" heading above stays the strongest heading (the `noComments` mixin, also cloned by `main.js` from a `<template>` when the last comment is deleted).
 - **Paw** on the admin badge and in the "Comment posted. Thanks for joining in!" / "Reply posted. Thanks for joining in!" acknowledgements, which are announced through the existing `role="status"` regions.
 
 **Rules:**
 - Decorative art is `aria-hidden`; meaningful text sits next to it.
 - Art never pushes content below the fold on the list or question box pages: with the hero, the first question box still starts in the first viewport at 390×844. No mark inside list rows, comments or forms.
-- Motion uses transforms and opacity only, 160–600ms (`--duration-quick`, `--duration-gentle`, `--duration-tap`), one shot (no loops), and lives inside `@media (prefers-reduced-motion: no-preference)`. With reduced motion the new-item tint stays but nothing moves.
+- Motion uses transforms and opacity only, 160–600ms (`--duration-quick`, `--duration-gentle`, `--duration-tap`), one shot (no loops), and lives inside `@media (prefers-reduced-motion: no-preference)`. With reduced motion the new-item tint stays but nothing moves. Flashes, acknowledgements and new items enter with a 6px slide only (`rise-in`), fully opaque from the first frame, so a screenshot taken right after an action is never washed out.
 - No named mascot, no speech bubbles, no confetti, no sound. Don't copy an existing mascot or logo.
 
 ## Do's and Don'ts

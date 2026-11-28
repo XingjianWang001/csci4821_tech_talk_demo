@@ -1,4 +1,5 @@
 include mixins/shiba
+include mixins/form
 
 doctype html
 html(lang="en")
@@ -13,46 +14,62 @@ html(lang="en")
         link(rel="stylesheet" href="/css/main.css")
     //- Pages set view variables (for example pageWidth) in this block.
     block vars
-    body(data-clear-draft=clearDraft)
+    //- data-draft-owner scopes saved drafts to the logged-in account (main.js).
+    body(data-clear-draft=clearDraft data-clear-all-drafts=clearAllDrafts ? 'true' : undefined data-draft-owner=user ? user.id : undefined)
         - var current = (href) => currentPath === href ? 'page' : undefined
         a.skip-link(href="#main") Skip to content
         header.navbar
-            nav.navbar-inner(aria-label="Main")
+            nav.navbar-inner(aria-label="Main" class=user ? 'navbar-inner--user' : undefined)
                 a.nav-brand(href="/" aria-current=current('/'))
                     +shibaMark({size: 36})
                     span.nav-brand-name Question Box Blog
                 .nav-right
                     if user
                         span.nav-user
-                            span.welcome Welcome, #{user.username}!
+                            //- On a phone only the name shows; the greeting stays for screen readers.
+                            span.welcome
+                                span.nav-compact-hide Welcome,&#32;
+                                span.welcome-name= user.username
+                                span.nav-compact-hide !
                             if user.isAdmin
                                 span.admin-badge
                                     +paw()
                                     | Admin
-                        a.nav-link(href="/post/new" aria-current=current('/post/new')) New Question Box
-                        a.nav-link(href="/logout") Log Out
+                        a.nav-link(href="/post/new" aria-current=current('/post/new')) New#[span.nav-compact-hide  Question Box]
+                        //- A POST, so a prefetch can't log anyone out.
+                        form.nav-logout(action="/logout" method="post")
+                            button.nav-link(type="submit") Log Out
                     else
                         a.nav-link(href=loginHref aria-current=current('/login')) Log In
                         a.nav-link(href=registerHref aria-current=current('/register')) Register
 
-        //- An optional hero that continues the header band (home only).
-        block hero
-
-        main.page#main(tabindex="-1")
+        //- The main landmark holds the flash, the hero and the page, so "Skip
+        //- to content" lands on the flash first, never past it.
+        main.site-main#main(tabindex="-1")
+            //- Flash messages sit right under the header, above any hero, so
+            //- the confirmation is next to the control that caused it.
             if message
-                .message(class=[messageType, pageWidth === 'narrow' ? 'message--narrow' : null] role=messageType === 'error' ? 'alert' : 'status')
-                    if messageType === 'success'
-                        +paw('message-paw')
-                    p.message-text= message
-                    button.message-dismiss(type="button" aria-label="Dismiss message")
-                        span(aria-hidden="true") ×
-            .content(class=pageWidth === 'narrow' ? 'content--narrow' : undefined)
-                block content
+                .flash-region(class=hasHero ? 'flash-region--band' : undefined)
+                    .message(class=[messageType, pageWidth === 'narrow' ? 'message--narrow' : null] role=messageType === 'error' ? 'alert' : 'status')
+                        if messageType === 'success'
+                            +paw('message-paw')
+                        p.message-text= message
+                        button.message-dismiss(type="button" aria-label="Dismiss message")
+                            span(aria-hidden="true") ×
+
+            //- An optional hero that continues the header band (home only).
+            block hero
+
+            .page
+                .content(class=pageWidth === 'narrow' ? 'content--narrow' : undefined)
+                    block content
 
         footer.footer
             .footer-inner
                 p &copy; #{new Date().getFullYear()} Question Box Blog · CSCI4131 Final Project
                 p Made with love by Shiba
 
+        script(src="/js/field-messages.js")
+        script(src="/js/thread-text.js")
         script(src="/js/main.js")
         block scripts

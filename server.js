@@ -2,6 +2,8 @@ const express = require('express');
 const session = require('express-session');
 const bcrypt = require('bcrypt');
 const data = require('./data');
+const {FIELD_MESSAGES, blankMessage} = require('./resources/js/field-messages');
+const threadText = require('./resources/js/thread-text');
 const app = express();
 const port = process.env.PORT || 4131;
 
@@ -110,6 +112,7 @@ function isoDate(value) {
 app.locals.formatDate = formatDate;
 app.locals.isoDate = isoDate;
 app.locals.excerpt = excerpt;
+Object.assign(app.locals, threadText);  // authorName, byline, commentWord
 
 app.use((req, res, next) => {
     res.locals.currentPath = req.path;
@@ -117,11 +120,13 @@ app.use((req, res, next) => {
     res.locals.message = req.session.message;
     res.locals.messageType = req.session.messageType;
     res.locals.clearDraft = req.session.clearDraft;
+    res.locals.clearAllDrafts = req.session.clearAllDrafts;
     res.locals.loginHref = authLink('/login', req);
     res.locals.registerHref = authLink('/register', req);
     delete req.session.message;
     delete req.session.messageType;
     delete req.session.clearDraft;
+    delete req.session.clearAllDrafts;
     next();
 });
 
@@ -160,24 +165,35 @@ function denyPermission(req, res, message, postId) {
     res.redirect(`/post/${postId}`);
 }
 
-// What the user typed, or '' when it's missing or only whitespace. Content
-// is kept exactly as typed (line breaks matter); only the check trims.
-function filledText(value) {
-    return typeof value === 'string' && value.trim() !== '' ? value : '';
+// Question box form: a message per blank field for the form to show next to
+// it. When it's ok, the title is saved trimmed and the content exactly as
+// typed (line breaks matter). blankMessage is the only blank check.
+function checkQuestionBox(body) {
+    const errors = fieldErrors({
+        title : blankMessage(body.title, 'title'),
+        content : blankMessage(body.content)
+    });
+    const ok = Object.keys(errors).length === 0;
+    return {
+        title : ok ? body.title.trim() : '',
+        content : ok ? body.content : '',
+        errors,
+        ok
+    };
 }
 
-// Question box form: a trimmed title and non-blank content, with a message
-// per field for the form to show next to it.
-function checkQuestionBox(body) {
-    const title = typeof body.title === 'string' ? body.title.trim() : '';
-    const content = filledText(body.content);
-    const errors = {};
-    if (!title) errors.title = "Add a title. Spaces alone don't count.";
-    if (!content) {
-        errors.content = "Write some content. Spaces and blank lines alone don't count.";
-    }
-    return {title, content, errors, ok : !errors.title && !errors.content};
+// Drops the fields with no message, so `errors` only names real problems.
+function fieldErrors(messages) {
+    return Object.fromEntries(
+        Object.entries(messages).filter(([ , message ]) => message));
 }
+
+// The first field, in reading order, that has an error: it alone gets
+// `autofocus`. Views pass their fields in the order they render them.
+function firstErrorField(errors, fields) {
+    return fields.find((name) => errors && errors[name]);
+}
+app.locals.firstErrorField = firstErrorField;
 
 app.get('/', async (req, res) => {
     const limit = 10;
@@ -200,33 +216,56 @@ app.get('/', async (req, res) => {
                {posts, currentPage : page, totalPages, title : 'Question Box Blog'});
 });
 
-app.get('/register', (req, res) => {
-    const returnTo = localPath(req.query.returnTo, req);
-    if (returnTo) req.session.returnTo = returnTo;
-    const username = req.session.formUsername || '';
-    delete req.session.formUsername;
-    res.render('register', {title : 'Register', username});
-});
+// Login and register share one shape. The GET remembers where to return to;
+// the POST starts from the trimmed username and a message per blank field,
+// and `fail()` re-shows the form (400) with every error under its field and
+// the username kept. Flashes are only for outcomes.
+const AUTH_FORMS = {
+    login : {title : 'Log In', fields : [ 'username', 'password' ]},
+    register :
+        {title : 'Register', fields : [ 'username', 'password', 'password2' ]}
+};
+
+function showAuthForm(view) {
+    return (req, res) => {
+        const returnTo = localPath(req.query.returnTo, req);
+        if (returnTo) req.session.returnTo = returnTo;
+        res.render(view, {title : AUTH_FORMS[view].title, username : ''});
+    };
+}
+
+// Usernames are compared and stored trimmed, so " devon " and "devon" are the
+// same person and a name made only of spaces is empty.
+function cleanUsername(value) {
+    return typeof value === 'string' ? value.trim() : '';
+}
+
+function readAuthForm(view, req, res) {
+    const {title, fields} = AUTH_FORMS[view];
+    const username = cleanUsername(req.body.username);
+    const errors = fieldErrors(Object.fromEntries(fields.map((name) => [
+        name,
+        blankMessage(req.body[name], name === 'username' ? 'username' : 'password')
+    ])));
+    const fail = () =>
+        res.status(400).render(view, {title, username, errors});
+    return {username, errors, fail};
+}
+
+app.get('/register', showAuthForm('register'));
 
 app.post('/register', async (req, res) => {
-    const {username, password, password2} = req.body;
-    // Validation errors keep the username for the next render of the form.
-    const fail = (message) => {
-        req.session.message = message;
-        req.session.messageType = 'error';
-        req.session.formUsername = typeof username === 'string' ? username : '';
-        res.redirect('/register');
-    };
-    if (!username || !password || !password2) {
-        return fail('Fill in a username and both password fields.');
+    const {password, password2} = req.body;
+    const {username, errors, fail} = readAuthForm('register', req, res);
+    // Every problem is reported in one response, so nobody fixes one field
+    // only to learn about the next.
+    if (!errors.password && !errors.password2 && password !== password2) {
+        errors.password2 = FIELD_MESSAGES.passwordMismatch;
     }
-    if (password !== password2) {
-        return fail("The passwords don't match. Enter the same password in both fields.");
+    if (!errors.username && await data.getUserByUsername(username)) {
+        errors.username = FIELD_MESSAGES.usernameTaken;
     }
-    const existingUser = await data.getUserByUsername(username);
-    if (existingUser) {
-        return fail('That username is taken. Choose a different one.');
-    }
+    if (Object.keys(errors).length) return fail();
     const hashedPassword = await bcrypt.hash(password, 10);
     const userId = await data.addUser(username, hashedPassword);
     req.session.user = {id : userId, username, isAdmin : 0};
@@ -235,32 +274,19 @@ app.post('/register', async (req, res) => {
     res.redirect(takeReturnTo(req));
 });
 
-app.get('/login', (req, res) => {
-    const returnTo = localPath(req.query.returnTo, req);
-    if (returnTo) req.session.returnTo = returnTo;
-    const username = req.session.formUsername || '';
-    delete req.session.formUsername;
-    res.render('login', {title : 'Log In', username});
-});
+app.get('/login', showAuthForm('login'));
 
 app.post('/login', async (req, res) => {
-    const {username, password} = req.body;
-    const fail = (message) => {
-        req.session.message = message;
-        req.session.messageType = 'error';
-        req.session.formUsername = typeof username === 'string' ? username : '';
-        res.redirect('/login');
-    };
-    if (!username || !password) {
-        return fail('Enter your username and password.');
-    }
+    const {password} = req.body;
+    const {username, errors, fail} = readAuthForm('login', req, res);
+    if (Object.keys(errors).length) return fail();
+    // An unknown username and a wrong password get the same message, at the
+    // password field, so the form never says which part was wrong.
     const user = await data.getUserByUsername(username);
-    if (!user) {
-        return fail("That username and password don't match. Check them and try again.");
-    }
-    const match = await bcrypt.compare(password, user.password);
+    const match = user && await bcrypt.compare(password, user.password);
     if (!match) {
-        return fail("That username and password don't match. Check them and try again.");
+        errors.password = FIELD_MESSAGES.wrongCredentials;
+        return fail();
     }
     req.session.user = {
         id : user.id,
@@ -272,13 +298,19 @@ app.post('/login', async (req, res) => {
     res.redirect(takeReturnTo(req));
 });
 
-app.get('/logout', (req, res, next) => {
+// Logging out is a POST from the header form, so a prefetch, crawler or
+// stray image request can't end someone's session. A GET just goes home.
+app.get('/logout', (req, res) => res.redirect('/'));
+
+app.post('/logout', (req, res, next) => {
     // A fresh, empty session carries the goodbye flash; the old one (and
-    // everything in it) is gone.
+    // everything in it) is gone. clearAllDrafts tells main.js to remove
+    // every saved draft, so the next person at this computer sees none.
     req.session.regenerate((err) => {
         if (err) return next(err);
         req.session.message = "You're logged out. See you next time!";
         req.session.messageType = 'success';
+        req.session.clearAllDrafts = true;
         res.redirect('/');
     });
 });
@@ -410,11 +442,24 @@ app.post('/post/:id/delete', requireLogin, async (req, res) => {
     res.redirect('/');
 });
 
+// The comment and reply APIs. A missing or unknown id is a problem with the
+// page, not with what was typed, so it gets its own message and no `field`.
+// Blank content is a field problem: {error, field: 'content'}, with the same
+// wording the browser uses, so main.js shows it under the textarea.
+function rejectBlankContent(res, content) {
+    const message = blankMessage(content);
+    if (message) res.status(400).json({error : message, field : 'content'});
+    return Boolean(message);
+}
+
 app.post('/api/comment', requireApiLogin, async (req, res) => {
     const {post_id, content, is_anonymous} = req.body;
-    if (!post_id || !filledText(content)) {
-        return res.status(400).json({error : 'Write something before adding your comment.'});
+    if (!post_id) {
+        return res.status(400).json({
+            error : "Couldn't tell which question box this comment is for. Refresh the page and try again."
+        });
     }
+    if (rejectBlankContent(res, content)) return;
     try {
         const user = await data.getUserByUsername(req.session.user.username);
         if (!user) {
@@ -422,6 +467,9 @@ app.post('/api/comment', requireApiLogin, async (req, res) => {
                 {error : "Your account couldn't be found. Log in again to continue."});
         }
         req.session.user.id = user.id;
+        if (!await data.getPostById(post_id)) {
+            return res.status(404).json({error : 'This question box no longer exists. Go back to the home page to see the latest ones.'});
+        }
         const commentId = await data.addComment(
             post_id,
             user.id,
@@ -461,9 +509,12 @@ app.delete('/api/comment/:id', requireApiLogin, async (req, res) => {
 
 app.post('/api/reply', requireApiLogin, async (req, res) => {
     const {comment_id, content, is_anonymous} = req.body;
-    if (!comment_id || !filledText(content)) {
-        return res.status(400).json({error : 'Write something before adding your reply.'});
+    if (!comment_id) {
+        return res.status(400).json({
+            error : "Couldn't tell which comment this reply is for. Refresh the page and try again."
+        });
     }
+    if (rejectBlankContent(res, content)) return;
     try {
         const user = await data.getUserByUsername(req.session.user.username);
         if (!user) {
